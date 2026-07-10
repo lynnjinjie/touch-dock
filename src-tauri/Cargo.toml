@@ -1,0 +1,17 @@
+[package]
+name = "touch-dock"
+version = "0.1.0"
+description = "Turn a phone browser into a secure local remote for a computer."
+authors = ["TouchDock"]
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "touch_dock_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
