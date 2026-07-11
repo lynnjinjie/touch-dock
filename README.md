@@ -89,6 +89,7 @@ The Vite development server uses `http://127.0.0.1:1420/`.
 ├── tools/                     Cross-target platform checks
 ├── PRODUCT.md                 Product definition
 ├── DESIGN.md                  UI system and interaction guidance
+├── CHANGELOG.md               Versioned notable changes
 ├── AGENTS.md                  Engineering instructions for coding agents
 └── skills-lock.json           Project-level agent skill sources
 ```
@@ -122,5 +123,6 @@ The mobile client sends an encrypted heartbeat every 15 seconds. The desktop clo
 
 - [Product definition](PRODUCT.md)
 - [Design system](DESIGN.md)
+- [Changelog](CHANGELOG.md)
 - [WebSocket protocol](docs/protocol.md)
 - [Agent instructions](AGENTS.md)
