@@ -70,6 +70,7 @@ h2 { margin-bottom: 5px; font-size: 14px; line-height: 1.3; }
 .qr-column { display: grid; justify-items: center; gap: 10px; }
 .qr-frame { position: relative; display: grid; place-items: center; width: 210px; height: 210px; border-radius: 8px; background: white; box-shadow: 0 2px 8px rgb(15 33 37 / 12%); }
 .qr-code { display: grid; place-items: center; width: 178px; height: 178px; color: #314145; }
+.qr-code > div { width: 100%; height: 100%; }
 .qr-code svg { display: block; width: 100%; height: 100%; }
 .qr-placeholder { color: #6d797c; font-size: 11px; }
 .session-label { color: #526164; font-size: 12px; font-weight: 650; }

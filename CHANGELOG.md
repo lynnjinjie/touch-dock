@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
+## Unreleased
+
+### Changed
+
+- migrate the Tauri desktop frontend from imperative JavaScript to React 19 and strict TypeScript while preserving the existing Quiet Native interface
+- align the Vite configuration, React entry point, and TypeScript project structure with the official Tauri 2 React template
+
 ## [v0.1.0](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.1.0) - 2026-07-11
 
 ### Features

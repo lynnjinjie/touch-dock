@@ -7,7 +7,7 @@ Build TouchDock as a secure, low-latency local remote for macOS and Windows. A p
 ## Current State
 
 - The repository contains a working Tauri 2 desktop application and embedded mobile controller.
-- Desktop markup, styles, and service-driven behavior live in `index.html`, `desktop.css`, and `desktop.js`.
+- The Tauri desktop frontend uses React and TypeScript in `src/App.tsx`, with its visual system in `src/App.css`.
 - Pairing, encrypted WebSocket transport, 24-hour session recovery, QR generation, mobile hosting, and macOS/Windows input injection are implemented.
 - The desktop UI reflects live service, permission, token-expiry, and session state.
 

@@ -1,25 +1,25 @@
 # TouchDock
 
-TouchDock 将同一局域网内的手机浏览器变成电脑的触控板和键盘。桌面端负责安全配对、连接状态和系统输入控制；手机端通过扫描二维码打开控制页面，无需安装 App。
+TouchDock turns a phone browser on the same local network into a trackpad and keyboard for a computer. The desktop application handles secure pairing, connection state, and operating-system input control. The phone opens the controller by scanning a QR code and requires no mobile app installation.
 
-> 当前仓库已实现 Rust 局域网服务、真实二维码、正式手机控制页面、短期一次性配对 token、加密断线恢复、P-256 + AES-GCM 应用层加密，以及 macOS/Windows 输入驱动。桌面连接状态已接入原生服务轮询；签名打包和跨平台 CI 仍在开发中。
+> The repository includes a Rust LAN service, real QR pairing, a production mobile controller, short-lived single-use pairing tokens, encrypted session recovery, P-256 and AES-GCM application-layer encryption, and macOS and Windows input drivers. The React desktop UI reflects live native service state. Signed distribution and cross-platform CI are still in development.
 
 ## Current Capabilities
 
-- 局域网内一次性二维码配对
-- 锁屏、切后台或临时断网后的加密 `Reconnect`，无需重复扫码
-- 触控板移动、可调速度、左右点击、双击、长按和滚动
-- 可拖动分隔线调节指针区与滚动区宽度
-- 文本输入、修饰键、方向键和常用系统快捷键
-- 清晰的连接、中断、失败和断开状态
-- macOS 与 Windows 平台输入驱动
+- Single-use QR pairing over the local network
+- Encrypted `Reconnect` after lock screen, browser suspension, or temporary network loss without another scan
+- Trackpad movement, adjustable pointer speed, left and right click, double click, hold, and scrolling
+- A draggable separator for resizing the pointer and scroll regions
+- Text entry, modifier keys, arrow keys, and common system shortcuts
+- Explicit connecting, active, interrupted, failed, and disconnected states
+- Platform input drivers for macOS and Windows
 
 ## Architecture
 
-TouchDock 使用 Tauri 2 构建跨平台桌面壳，并把平台相关输入能力隔离在 Rust 驱动层中。
+TouchDock uses Tauri 2 for the cross-platform desktop shell and isolates platform-specific input control behind Rust driver modules. The desktop WebView is implemented with React and TypeScript. The embedded mobile controller remains transport-focused and independent of Tauri APIs.
 
 ```text
-Desktop UI          Vite + HTML/CSS/JavaScript
+Desktop UI          React 19 + TypeScript + Vite 7
 Mobile Controller   Browser UI + bundled audited crypto primitives
 Core Service        Rust HTTP/WebSocket, pairing, encryption and sessions
 Input Drivers       macOS CGEvent / Windows SendInput
@@ -76,9 +76,8 @@ The Vite development server uses `http://127.0.0.1:1420/`.
 
 ```text
 .
-├── index.html                 Production desktop application shell
-├── desktop.css                Quiet Native desktop visual system
-├── desktop.js                 Live desktop service state and actions
+├── index.html                 React desktop entry document
+├── src/                       React and TypeScript desktop application
 ├── mobile/                    Embedded mobile page and bundled controller
 ├── mobile-src/                Mobile controller source and crypto tests
 ├── src-tauri/                 Tauri configuration and Rust application

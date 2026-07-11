@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm run build:mobile && vite",
-    "build": "pnpm run build:mobile && vite build",
+    "build": "tsc && pnpm run build:mobile && vite build",
     "build:mobile": "esbuild mobile-src/app.js --bundle --format=esm --minify --outfile=mobile/app.js",
     "test:mobile": "node --test mobile-src/crypto.test.js mobile-src/input-behavior.test.js",
     "preview": "vite preview",
@@ -15,11 +15,17 @@
     "@noble/ciphers": "^2.2.0",
     "@noble/curves": "^2.2.0",
     "@noble/hashes": "^2.2.0",
-    "@tauri-apps/api": "^2.0.0"
+    "@tauri-apps/api": "^2.0.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.7.0",
     "esbuild": "0.28.1",
+    "typescript": "~5.8.3",
     "vite": "^7.0.0"
   },
   "pnpm": {
