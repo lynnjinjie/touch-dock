@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#f5f7f7">
+    <title>TouchDock Remote</title>
+    <link rel="stylesheet" href="/remote/style.css">
+  </head>
+  <body>
+    <main class="remote-shell" data-state="connecting" id="remoteShell">
+      <header class="app-header">
+        <div class="brand-mark" aria-hidden="true">T</div>
+        <div class="brand-copy"><strong>TouchDock</strong><span>Remote control</span></div>
+        <div class="connection" id="connection" role="status" aria-live="polite"><i aria-hidden="true"></i><span id="connectionText">Connecting</span></div>
+      </header>
+
+      <section class="notice" id="notice" role="alert" hidden>
+        <div><strong id="noticeTitle">Unable to connect</strong><p id="noticeBody">Scan the current QR code on your computer.</p></div>
+        <button type="button" id="retryButton" hidden>Reconnect</button>
+      </section>
+
+      <nav class="tabs" role="tablist" aria-label="Remote controls">
+        <button class="tab active" id="trackpadTab" type="button" role="tab" aria-selected="true" aria-controls="trackpadPanel" data-tab="trackpad">Trackpad</button>
+        <button class="tab" id="keysTab" type="button" role="tab" aria-selected="false" aria-controls="keysPanel" data-tab="keys" tabindex="-1">Keys</button>
+        <button class="tab" id="shortcutsTab" type="button" role="tab" aria-selected="false" aria-controls="shortcutsPanel" data-tab="shortcuts" tabindex="-1">Shortcuts</button>
+      </nav>
+
+      <section class="panel trackpad-panel active" id="trackpadPanel" role="tabpanel" aria-labelledby="trackpadTab">
+        <div class="trackpad" id="trackpad" aria-label="Trackpad area">
+          <div class="trackpad-center" aria-hidden="true"><i></i><span>Move pointer</span></div>
+          <div class="scroll-zone" id="scrollZone" aria-label="Vertical scroll area">
+            <div class="scroll-resizer" id="scrollResizer" role="separator" aria-label="Resize scroll area" aria-orientation="vertical" aria-valuemin="38" aria-valuemax="180" aria-valuenow="38" tabindex="0"></div>
+            <i aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="speed-control">
+          <label for="pointerSpeed">Pointer speed</label>
+          <input id="pointerSpeed" type="range" min="0.5" max="3" step="0.1" value="1" aria-describedby="pointerSpeedValue">
+          <output id="pointerSpeedValue" for="pointerSpeed">1.0×</output>
+        </div>
+        <div class="click-row">
+          <button class="click-button" type="button" data-click="left"><span aria-hidden="true">◉</span>Left click</button>
+          <button class="click-button" type="button" data-click="right"><span aria-hidden="true">◎</span>Right click</button>
+        </div>
+      </section>
+
+      <section class="panel keys-panel" id="keysPanel" role="tabpanel" aria-labelledby="keysTab" hidden>
+        <div class="text-entry">
+          <input id="textInput" type="text" maxlength="128" autocomplete="off" autocapitalize="sentences" placeholder="Type on your computer" aria-label="Text to type on computer">
+          <button id="sendTextButton" class="send-button" type="button" aria-label="Send text" title="Send text">↑</button>
+        </div>
+        <div class="direction-pad" aria-label="Arrow keys">
+          <button class="key key-up" type="button" data-key="arrow_up" aria-label="Arrow up" title="Arrow up">↑</button>
+          <button class="key key-left" type="button" data-key="arrow_left" aria-label="Arrow left" title="Arrow left">←</button>
+          <button class="key key-down" type="button" data-key="arrow_down" aria-label="Arrow down" title="Arrow down">↓</button>
+          <button class="key key-right" type="button" data-key="arrow_right" aria-label="Arrow right" title="Arrow right">→</button>
+        </div>
+        <div class="utility-keys" aria-label="Keyboard keys">
+          <button class="utility-key" type="button" data-key="escape"><span aria-hidden="true">×</span><small>Esc</small></button>
+          <button class="utility-key" type="button" data-key="tab"><span aria-hidden="true">⇥</span><small>Tab</small></button>
+          <button class="utility-key" type="button" data-key="space"><span aria-hidden="true">␣</span><small>Space</small></button>
+          <button class="utility-key" type="button" data-key="backspace"><span aria-hidden="true">⌫</span><small>Delete</small></button>
+          <button class="utility-key" type="button" data-key="enter"><span aria-hidden="true">↵</span><small>Enter</small></button>
+        </div>
+      </section>
+
+      <section class="panel shortcuts-panel" id="shortcutsPanel" role="tabpanel" aria-labelledby="shortcutsTab" hidden>
+        <button class="shortcut" type="button" data-modifiers="meta" data-shortcut-key="tab"><span class="shortcut-icon" aria-hidden="true">⌘⇥</span><span><strong>Switch apps</strong><small>Command + Tab</small></span></button>
+        <button class="shortcut" type="button" data-modifiers="meta" data-shortcut-key="space"><span class="shortcut-icon" aria-hidden="true">⌕</span><span><strong>Search</strong><small>Command + Space</small></span></button>
+        <button class="shortcut" type="button" data-modifiers="control" data-shortcut-key="arrow_up"><span class="shortcut-icon" aria-hidden="true">⌃↑</span><span><strong>Overview</strong><small>Control + Up</small></span></button>
+        <button class="shortcut" type="button" data-modifiers="function" data-shortcut-key="f11"><span class="shortcut-icon" aria-hidden="true">▦</span><span><strong>Show desktop</strong><small>Function + F11</small></span></button>
+        <button class="shortcut" type="button" data-key="mute"><span class="shortcut-icon" aria-hidden="true">⊘</span><span><strong>Mute audio</strong><small>System audio</small></span></button>
+      </section>
+
+      <footer class="secure-state"><span aria-hidden="true">●</span> Commands encrypted on this device</footer>
+    </main>
+    <script type="module" src="/remote/app.js"></script>
+  </body>
+</html>

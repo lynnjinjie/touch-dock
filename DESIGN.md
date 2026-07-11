@@ -151,13 +151,12 @@ The palette reads like a clean local network indicator: cool mist surfaces, deep
 
 ## 4. Elevation
 
-TouchDock is flat by default and uses tonal separation for internal hierarchy. Soft ambient lift is reserved for complete device silhouettes and top-level windows.
+TouchDock is flat by default and uses tonal separation for internal hierarchy. Soft lift is reserved for the scannable QR surface and transient system feedback.
 
 ### Shadow Vocabulary
 
-- **Window Ambient** (`0 8px 24px oklch(0.2 0.02 220 / 0.12)`): The Mac window against the prototype canvas only.
-- **Device Ambient** (`0 12px 32px oklch(0.2 0.02 220 / 0.18)`): The phone silhouette against the prototype canvas only.
-- **Control Lift** (`0 2px 7px oklch(0.2 0 0 / 0.1)`): Selected concept controls in the prototype toolbar.
+- **QR Lift** (`0 2px 8px rgb(15 33 37 / 12%)`): Separates the physical scan target from the application surface.
+- **Selection Lift** (`0 1px 5px rgb(18 31 34 / 10%)`): Reserved for selected segmented controls on mobile.
 
 ### Named Rules
 
@@ -199,7 +198,13 @@ Desktop navigation uses a persistent quiet sidebar with 44px rows and a Signal W
 
 ### Trackpad
 
-The trackpad is the largest mobile region. It uses a low-contrast measurement dot field because it is an actual input canvas, a visible pointer-feedback ring, and a separate scroll rail. Pointer, touch, keyboard activation, and reduced-motion preferences are all supported.
+The trackpad is the largest mobile region. It uses a low-contrast measurement dot field because it is an actual input canvas, a visible pointer-feedback ring, and a separate scroll region. A vertical separator adjusts the pointer and scroll widths from a 24px drag target; the scroll indicator stays centered within the complete visible scroll region. Pointer speed is adjustable and persisted locally.
+
+Short taps produce native clicks, two taps produce a native double click, and holding a click or key control sends one `down` until release sends `up`. iOS text selection, touch callouts, and double-tap page zoom stay disabled on direct-manipulation controls.
+
+### Connection Recovery
+
+An interrupted resumable session uses the title `Connection paused`, supporting copy `Tap Reconnect to resume control.`, and the action label `Reconnect`. `Retry` is reserved for retrying a failed operation, not resuming an established device relationship. While disconnected, remote controls are visibly unavailable and held inputs are released by the desktop service.
 
 ## 6. Do's and Don'ts
 

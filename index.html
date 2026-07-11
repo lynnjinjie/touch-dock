@@ -1,536 +1,130 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>TouchDock - Secure Pairing Prototype</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-      --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
-      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px;
-      --page: oklch(0.965 0.006 200);
-      --ink: oklch(0.18 0.018 220);
-      --muted: oklch(0.47 0.018 220);
-      --line: oklch(0.88 0.012 210);
-      --surface: oklch(1 0 0);
-      --surface-2: oklch(0.975 0.006 200);
-      --primary: oklch(0.54 0.11 196);
-      --primary-strong: oklch(0.49 0.11 196);
-      --primary-soft: oklch(0.94 0.035 196);
-      --success: oklch(0.62 0.15 145);
-      --warning: oklch(0.75 0.15 75);
-      --danger: oklch(0.58 0.19 28);
-      --button-ink: oklch(1 0 0);
-      --shadow: 0 8px 24px oklch(0.2 0.02 220 / 0.12);
-      --phone-shadow: 0 12px 32px oklch(0.2 0.02 220 / 0.18);
-    }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>TouchDock</title>
+    <link rel="stylesheet" href="/desktop.css">
+  </head>
+  <body>
+    <div class="app-shell" id="appShell" data-state="loading">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-icon" aria-hidden="true">T</span>
+          <span><strong>TouchDock</strong><small>Local remote</small></span>
+        </div>
 
-    * { box-sizing: border-box; }
-    html { min-width: 320px; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--page);
-      color: var(--ink);
-      font: 400 1rem/1.45 var(--font-ui);
-      letter-spacing: 0;
-      transition: background 180ms ease-out, color 180ms ease-out;
-    }
-    button { font: inherit; color: inherit; letter-spacing: 0; }
-    button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-    button:disabled { cursor: not-allowed; opacity: .46; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        <nav class="navigation" aria-label="TouchDock">
+          <button class="nav-item active" type="button" data-view="connect" aria-current="page">
+            <span class="nav-icon" aria-hidden="true">⌁</span>Connect
+          </button>
+          <button class="nav-item" type="button" data-view="security">
+            <span class="nav-icon" aria-hidden="true">◇</span>Security
+          </button>
+        </nav>
 
-    .prototype-bar {
-      position: sticky; top: 0; z-index: 20;
-      display: flex; align-items: center; justify-content: space-between; gap: var(--s4);
-      min-height: 68px; padding: var(--s3) clamp(16px, 3vw, 40px);
-      background: oklch(1 0 0 / .94); border-bottom: 1px solid oklch(0.88 0 0);
-      backdrop-filter: blur(12px);
-    }
-    .prototype-brand { display: flex; align-items: center; gap: var(--s3); min-width: max-content; }
-    .prototype-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--radius-md); background: oklch(0.18 0.018 220); color: white; font-weight: 750; }
-    .prototype-brand h1 { margin: 0; font-size: 1rem; line-height: 1.45; }
-    .prototype-brand span { display: block; color: oklch(0.44 0 0); font-size: .75rem; }
-    .state-controls { display: flex; align-items: center; gap: var(--s2); }
-    .demo-button { min-height: 44px; padding: 0 var(--s4); border: 0; border-radius: var(--radius-sm); background: oklch(0.16 0 0); color: white; cursor: pointer; font-weight: 700; }
-    .state-picker { display: flex; align-items: center; gap: var(--s2); color: oklch(0.38 0 0); font-size: .75rem; font-weight: 700; }
-    .state-picker select { min-height: 44px; padding: 0 34px 0 var(--s3); border: 1px solid oklch(0.84 0 0); border-radius: var(--radius-sm); background: white; color: oklch(0.16 0 0); font: 650 .8125rem/1 var(--font-ui); cursor: pointer; }
+        <div class="sidebar-footer">
+          <span class="service-light" aria-hidden="true"></span>
+          <span><strong id="sidebarState">Starting</strong><small id="sidebarAddress">Local service</small></span>
+        </div>
+      </aside>
 
-    main { width: min(1440px, 100%); margin: 0 auto; padding: var(--s5) clamp(16px, 3vw, 40px) var(--s7); }
+      <main class="content">
+        <section class="view active" id="connectView" data-view-panel="connect">
+          <header class="page-header">
+            <div>
+              <h1>Connect your phone</h1>
+              <p>Scan the current code with your phone camera.</p>
+            </div>
+            <div class="status-badge" id="statusBadge" role="status" aria-live="polite">
+              <i aria-hidden="true"></i><span>Starting</span>
+            </div>
+          </header>
 
-    .device-stage { display: grid; grid-template-columns: minmax(600px, 1fr) 330px; align-items: center; gap: clamp(24px, 4vw, 64px); }
-    .window {
-      min-width: 0; height: 600px; overflow: hidden; border-radius: var(--radius-lg);
-      background: var(--surface); box-shadow: var(--shadow); border: 1px solid var(--line);
-      transition: background 180ms ease-out, border-color 180ms ease-out;
-    }
-    .titlebar { height: 46px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 var(--s4); border-bottom: 1px solid var(--line); background: var(--surface); }
-    .traffic { display: flex; gap: 7px; }
-    .traffic i { width: 11px; height: 11px; border-radius: 50%; }
-    .traffic i:nth-child(1) { background: oklch(0.67 0.2 29); }
-    .traffic i:nth-child(2) { background: oklch(0.79 0.16 80); }
-    .traffic i:nth-child(3) { background: oklch(0.67 0.17 145); }
-    .titlebar strong { font-size: .8125rem; }
-    .window-body { display: grid; grid-template-columns: 188px 1fr; height: calc(100% - 46px); }
-    .sidebar { display: flex; flex-direction: column; padding: var(--s4) var(--s3); background: var(--surface-2); border-right: 1px solid var(--line); }
-    .app-lockup { display: flex; align-items: center; gap: var(--s3); padding: var(--s2); margin-bottom: var(--s5); }
-    .app-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: var(--radius-md); background: var(--primary); color: var(--button-ink); font-weight: 800; }
-    .app-lockup strong { font-size: .9375rem; }
-    .app-lockup span { display: block; color: var(--muted); font-size: .6875rem; }
-    .nav-list { display: grid; gap: var(--s1); }
-    .nav-item { display: flex; align-items: center; gap: var(--s3); min-height: 44px; padding: 0 var(--s3); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); cursor: pointer; text-align: left; font-size: .8125rem; }
-    .nav-item b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 5px; font-size: .6875rem; background: var(--line); color: var(--ink); }
-    .nav-item.active { background: var(--primary-soft); color: var(--primary-strong); font-weight: 700; }
-    .nav-item.active b { background: var(--primary); color: var(--button-ink); }
-    .network-info { margin-top: auto; padding: var(--s3) var(--s2) 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .6875rem; }
-    .network-info strong { display: block; color: var(--ink); font-size: .75rem; }
+          <section class="issue-banner" id="issueBanner" role="alert" hidden>
+            <span class="issue-icon" aria-hidden="true">!</span>
+            <div><strong id="issueTitle">Local network unavailable</strong><p id="issueBody"></p></div>
+            <button class="issue-action" id="issueAction" type="button" hidden>Request access</button>
+          </section>
 
-    .desktop-content { min-width: 0; padding: var(--s5); overflow: auto; }
-    .content-top { display: flex; align-items: start; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
-    .content-top h2 { margin: 0 0 var(--s1); font-size: 1.25rem; line-height: 1.2; }
-    .content-top p { margin: 0; color: var(--muted); font-size: .8125rem; }
-    .status { display: inline-flex; align-items: center; gap: var(--s2); min-height: 32px; padding: 0 var(--s3); border-radius: 999px; background: var(--primary-soft); color: var(--primary-strong); font-size: .75rem; font-weight: 700; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px oklch(0.62 0.15 145 / .15); }
-    .status[data-state="preview"] .status-dot, .status[data-state="ready"] .status-dot { background: var(--warning); box-shadow: none; }
-    .status[data-state="connecting"] .status-dot { background: var(--primary); box-shadow: 0 0 0 3px oklch(0.54 0.11 196 / .14); }
-    .status[data-state="interrupted"] .status-dot, .status[data-state="failed"] .status-dot { background: var(--danger); box-shadow: none; }
-    .status[data-state="preview"], .status[data-state="ready"] { background: oklch(0.94 0.04 75); color: oklch(0.45 0.1 75); }
-    .status[data-state="interrupted"], .status[data-state="failed"] { background: oklch(0.94 0.04 28); color: oklch(0.45 0.15 28); }
-
-    .overview { display: grid; grid-template-columns: minmax(240px, 1.1fr) minmax(220px, .9fr); gap: var(--s5); }
-    .pairing { min-height: 414px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--s5); border: 1px solid var(--line); border-radius: var(--radius-md); text-align: center; }
-    .pairing h3 { margin: var(--s4) 0 var(--s2); font-size: 1.0625rem; }
-    .pairing p { max-width: 30ch; margin: 0; color: var(--muted); font-size: .8125rem; }
-    .qr-wrap { display: grid; place-items: center; width: 172px; height: 172px; border-radius: var(--radius-md); background: white; border: 1px solid oklch(0.87 0 0); }
-    .qr { display: grid; grid-template-columns: repeat(21, 5px); grid-auto-rows: 5px; width: 105px; height: 105px; background: white; }
-    .qr i.on { background: oklch(0.1 0 0); }
-    .pair-code { margin-top: var(--s4); color: var(--muted); font: 650 .75rem/1 var(--font-ui); font-variant-numeric: tabular-nums; }
-    .connect-button { min-height: 44px; margin-top: var(--s4); padding: 0 var(--s5); border: 0; border-radius: var(--radius-sm); background: var(--primary); color: var(--button-ink); cursor: pointer; font-weight: 750; }
-    .side-stack { display: flex; flex-direction: column; gap: var(--s5); }
-    .section-block { padding-bottom: var(--s5); border-bottom: 1px solid var(--line); }
-    .section-block:last-child { border-bottom: 0; padding-bottom: 0; }
-    .section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s3); }
-    .section-title h3 { margin: 0; font-size: .875rem; }
-    .section-title span { color: var(--muted); font-size: .6875rem; }
-    .permission-list { display: grid; gap: var(--s2); }
-    .permission { display: flex; align-items: center; gap: var(--s3); min-height: 48px; padding: 0 var(--s3); border-radius: var(--radius-sm); background: var(--surface-2); }
-    .permission .check { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: oklch(0.91 0.05 145); color: oklch(0.45 0.15 145); font-size: .6875rem; font-weight: 900; }
-    .permission span { font-size: .75rem; font-weight: 650; }
-    .permission em { margin-left: auto; color: var(--success); font-size: .6875rem; font-style: normal; }
-    .device-row { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) 0; }
-    .device-avatar { display: grid; place-items: center; width: 42px; height: 42px; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary-strong); font-weight: 800; }
-    .device-row strong { display: block; font-size: .8125rem; }
-    .device-row span { color: var(--muted); font-size: .6875rem; }
-    .latency { margin-left: auto; color: var(--success); font-size: .75rem; font-weight: 750; font-variant-numeric: tabular-nums; }
-
-    .phone { width: 320px; height: 650px; justify-self: center; overflow: hidden; position: relative; border: 7px solid oklch(0.12 0.01 220); border-radius: 38px; background: var(--surface); box-shadow: var(--phone-shadow); transition: background 180ms ease-out; }
-    .phone::after { content: ""; position: absolute; left: 50%; bottom: 7px; width: 108px; height: 4px; border-radius: 999px; background: var(--ink); transform: translateX(-50%); opacity: .8; }
-    .phone-status { display: flex; justify-content: space-between; align-items: center; height: 28px; padding: 0 18px; font-size: .625rem; font-weight: 700; }
-    .phone-app { display: flex; flex-direction: column; height: calc(100% - 28px); padding: var(--s3) var(--s3) 25px; }
-    .phone-head { display: flex; align-items: center; justify-content: space-between; min-height: 38px; }
-    .phone-head strong { font-size: .875rem; }
-    .icon-button { width: 44px; height: 44px; border: 0; border-radius: var(--radius-sm); background: transparent; cursor: pointer; font-weight: 800; }
-    .connection-line { display: flex; align-items: center; justify-content: center; gap: var(--s2); min-height: 26px; color: var(--muted); font-size: .6875rem; }
-    .connection-line i { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
-    .connection-line[data-state="preview"] i, .connection-line[data-state="ready"] i { background: var(--warning); }
-    .connection-line[data-state="connecting"] i { background: var(--primary); }
-    .connection-line[data-state="interrupted"] i, .connection-line[data-state="failed"] i { background: var(--danger); }
-    .remote-gate { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 48px; margin: var(--s2) 0; padding: var(--s2) var(--s3); border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary-strong); font-size: .6875rem; font-weight: 700; }
-    .remote-gate[hidden] { display: none; }
-    .remote-gate button { min-height: 44px; padding: 0 var(--s3); border: 0; border-radius: var(--radius-sm); background: var(--primary); color: var(--button-ink); cursor: pointer; font-size: .6875rem; font-weight: 750; }
-    .phone[data-connection-state="interrupted"] .remote-gate, .phone[data-connection-state="failed"] .remote-gate { background: oklch(0.94 0.04 28); color: oklch(0.42 0.16 28); }
-    .phone[data-connection-state="interrupted"] .remote-gate button, .phone[data-connection-state="failed"] .remote-gate button { background: var(--danger); color: white; }
-    .mobile-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s1); margin: var(--s2) 0 var(--s3); padding: var(--s1); border-radius: var(--radius-md); background: var(--surface-2); }
-    .mobile-tab { min-height: 44px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); cursor: pointer; font-size: .6875rem; font-weight: 700; }
-    .mobile-tab.active { background: var(--primary); color: var(--button-ink); }
-    .mobile-panel { display: none; min-height: 0; flex: 1; }
-    .mobile-panel[hidden] { display: none; }
-    .mobile-panel.active { display: flex; flex-direction: column; }
-    .trackpad { position: relative; min-height: 0; flex: 1; overflow: hidden; touch-action: none; border-radius: var(--radius-md); background: var(--surface-2); border: 1px solid var(--line); cursor: crosshair; }
-    .trackpad::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle, var(--line) 1px, transparent 1px); background-size: 20px 20px; opacity: .35; }
-    .cursor-dot { position: absolute; left: 50%; top: 45%; width: 18px; height: 18px; border: 2px solid var(--primary); border-radius: 50%; transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 7px oklch(0.54 0.11 196 / .12); pointer-events: none; transition: transform 120ms ease-out; }
-    .cursor-dot.active { transform: translate(-50%, -50%) scale(1.55); }
-    .scroll-rail { position: absolute; top: var(--s3); right: var(--s2); bottom: var(--s3); width: 26px; display: flex; justify-content: center; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
-    .scroll-thumb { width: 4px; height: 52px; margin-top: 40%; border-radius: 999px; background: var(--primary); transition: transform 120ms ease-out; }
-    .click-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); margin-top: var(--s2); }
-    .click-button { min-height: 50px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; font-size: .75rem; font-weight: 750; }
-    .click-button:active, .key:active, .shortcut:active { transform: translateY(1px); background: var(--primary-soft); }
-    .feedback { min-height: 22px; margin: var(--s2) 0 0; color: var(--muted); text-align: center; font-size: .6875rem; }
-    .key-panel { justify-content: space-between; gap: var(--s4); padding: var(--s2) 0; }
-    .key-cluster { display: grid; grid-template-columns: repeat(3, 54px); justify-content: center; gap: var(--s2); }
-    .key { min-height: 54px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); cursor: pointer; font-size: 1.5rem; font-weight: 650; line-height: 1; }
-    .key.up { grid-column: 2; } .key.left { grid-column: 1; } .key.down { grid-column: 2; } .key.right { grid-column: 3; }
-    .modifiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); }
-    .modifier { min-height: 48px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; font-size: 1.375rem; font-weight: 650; line-height: 1; }
-    .modifier.active { background: var(--primary); color: var(--button-ink); border-color: var(--primary); }
-    .keyboard-input { width: 100%; min-height: 48px; padding: 0 var(--s3); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--ink); font: inherit; }
-    .shortcuts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s2); align-content: start; }
-    .shortcut { display: flex; flex-direction: column; align-items: start; justify-content: space-between; min-height: 92px; padding: var(--s3); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); cursor: pointer; text-align: left; }
-    .shortcut b { color: var(--primary-strong); font-size: 1rem; }
-    .shortcut span { font-size: .75rem; font-weight: 700; }
-    .shortcut small { color: var(--muted); font-size: .625rem; }
-    .phone[data-connection-state]:not([data-connection-state="connected"]) .mobile-tabs,
-    .phone[data-connection-state]:not([data-connection-state="connected"]) .mobile-panel { opacity: .48; }
-    .phone[data-connection-state]:not([data-connection-state="connected"]) .trackpad { cursor: not-allowed; }
-
-    dialog { width: min(360px, calc(100vw - 32px)); padding: 0; border: 0; border-radius: var(--radius-md); background: var(--surface); color: var(--ink); box-shadow: 0 12px 32px oklch(0.16 0.01 220 / .22); }
-    dialog::backdrop { background: oklch(0.08 0 0 / .54); }
-    .dialog-body { padding: var(--s5); }
-    .dialog-body h2 { margin: 0 0 var(--s2); font-size: 1.125rem; }
-    .dialog-body p { margin: 0; color: var(--muted); font-size: .875rem; }
-    .dialog-detail { display: grid; gap: var(--s2); margin-top: var(--s4); padding: var(--s3); border-radius: var(--radius-sm); background: var(--surface-2); font-size: .75rem; }
-    .dialog-detail span { display: flex; justify-content: space-between; gap: var(--s3); }
-    .dialog-actions { display: flex; justify-content: flex-end; gap: var(--s2); padding: var(--s3) var(--s5); border-top: 1px solid var(--line); }
-    .dialog-actions button { min-height: 44px; padding: 0 var(--s4); border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; }
-    .dialog-secondary { border: 1px solid var(--line); background: var(--surface); }
-    .dialog-primary { border: 0; background: var(--primary); color: var(--button-ink); }
-    .dialog-danger { border: 0; background: var(--danger); color: white; }
-
-    .toast { position: fixed; left: 50%; bottom: var(--s5); z-index: 30; padding: var(--s3) var(--s4); border-radius: var(--radius-sm); background: oklch(0.16 0 0); color: white; font-size: .8125rem; font-weight: 650; box-shadow: 0 8px 18px oklch(0.1 0 0 / .2); transform: translate(-50%, 24px); opacity: 0; pointer-events: none; transition: transform 180ms cubic-bezier(.22,1,.36,1), opacity 180ms ease-out; }
-    .toast.show { transform: translate(-50%, 0); opacity: 1; }
-
-    .desktop-page { display: none; }
-    .desktop-page.active { display: block; }
-    .empty-page { display: grid; place-items: center; min-height: 390px; text-align: center; color: var(--muted); }
-    .empty-page b { display: block; margin-bottom: var(--s2); color: var(--ink); font-size: 1rem; }
-
-    @media (max-width: 980px) {
-      .prototype-bar { align-items: stretch; flex-wrap: wrap; }
-      .prototype-brand { flex: 1; }
-      .device-stage { grid-template-columns: 1fr; }
-      .window { height: 560px; }
-      .phone { margin-top: var(--s5); }
-    }
-    @media (max-width: 680px) {
-      .prototype-bar { position: static; }
-      .prototype-brand span, .demo-button { display: none; }
-      main { padding-top: var(--s4); }
-      .window { height: 590px; }
-      .window-body { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-      .desktop-content { padding: var(--s4); }
-      .overview { grid-template-columns: 1fr; }
-      .side-stack { display: none; }
-      .pairing { min-height: 470px; }
-      .phone { width: min(320px, calc(100vw - 32px)); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
-    }
-  </style>
-</head>
-<body>
-  <header class="prototype-bar">
-    <div class="prototype-brand"><div class="prototype-mark">TD</div><div><h1>TouchDock prototype</h1><span>Secure local pairing + remote control</span></div></div>
-    <div class="state-controls"><label class="state-picker">Demo state<select id="statePicker" aria-label="Connection demo state"><option value="preview">Preview</option><option value="ready">Ready</option><option value="connecting">Connecting</option><option value="connected">Connected</option><option value="interrupted">Interrupted</option><option value="failed">Failed</option></select></label><button class="demo-button" id="demoConnection">Begin demo</button></div>
-  </header>
-
-  <main>
-    <section class="device-stage" aria-label="TouchDock interface preview">
-      <article class="window" aria-label="Mac desktop app">
-        <div class="titlebar"><div class="traffic"><i></i><i></i><i></i></div><strong>TouchDock</strong><div></div></div>
-        <div class="window-body">
-          <aside class="sidebar">
-            <div class="app-lockup"><div class="app-icon">T</div><div><strong>TouchDock</strong><span>Local remote</span></div></div>
-            <nav class="nav-list" aria-label="Desktop navigation">
-              <button class="nav-item active" data-page="overview"><b>O</b>Overview</button>
-              <button class="nav-item" data-page="devices"><b>D</b>Devices</button>
-              <button class="nav-item" data-page="settings"><b>S</b>Settings</button>
-            </nav>
-            <div class="network-info"><strong>Local Wi-Fi</strong>192.168.1.42<br>Encrypted session</div>
-          </aside>
-          <div class="desktop-content">
-            <section class="desktop-page active" data-page-content="overview">
-              <div class="content-top"><div><h2>Connect your phone</h2><p>Scan once. Control stays on your local network.</p></div><div class="status" id="desktopStatus" data-state="preview" role="status" aria-live="polite"><i class="status-dot"></i><span>Preview</span></div></div>
-              <div class="overview">
-                <div class="pairing">
-                  <div class="qr-wrap"><div class="qr" id="qr" aria-label="Demo pairing QR code"></div></div>
-                  <h3 id="pairTitle">Scan to connect</h3><p id="pairDescription">Open your phone camera and scan this code to launch TouchDock.</p><div class="pair-code">touchdock.local / 4816</div>
-                  <button class="connect-button" id="pairButton">Begin pairing demo</button>
+          <section class="pairing-layout" aria-labelledby="pairingTitle">
+            <div class="qr-column">
+              <div class="qr-frame" id="qrFrame">
+                <div class="qr-code" id="qrCode" aria-label="TouchDock pairing QR code">
+                  <span class="qr-placeholder">Preparing code</span>
                 </div>
-                <div class="side-stack">
-                  <section class="section-block"><div class="section-title"><h3>Permissions</h3><span>Required</span></div><div class="permission-list"><div class="permission"><div class="check">OK</div><span>Input Monitoring</span><em>Allowed</em></div><div class="permission"><div class="check">OK</div><span>Accessibility</span><em>Allowed</em></div><div class="permission"><div class="check">OK</div><span>Local Network</span><em>Allowed</em></div></div></section>
-                  <section class="section-block"><div class="section-title"><h3>Active device</h3><span id="deviceCount">None</span></div><div class="device-row"><div class="device-avatar">PH</div><div><strong id="deviceName">Waiting for phone</strong><span id="deviceMeta">Scan the QR code to pair</span></div><div class="latency" id="latency">--</div></div></section>
-                </div>
+                <div class="session-label" id="sessionLabel" hidden>Phone connected</div>
               </div>
-            </section>
-            <section class="desktop-page" data-page-content="devices"><div class="content-top"><div><h2>Paired devices</h2><p>Devices are authorized for this session only.</p></div></div><div class="empty-page"><div><b id="devicesEmpty">No paired devices yet</b><span>Scan the pairing code from Overview.</span></div></div></section>
-            <section class="desktop-page" data-page-content="settings"><div class="content-top"><div><h2>Settings</h2><p>Connection and input preferences.</p></div></div><div class="permission-list"><div class="permission"><div class="check">ON</div><span>Require a fresh code after disconnect</span><em>Enabled</em></div><div class="permission"><div class="check">ON</div><span>Show TouchDock in menu bar</span><em>Enabled</em></div><div class="permission"><div class="check">ON</div><span>Natural scrolling</span><em>Enabled</em></div></div></section>
-          </div>
-        </div>
-      </article>
+              <div class="expiry" id="expiryText">Generating a secure code…</div>
+            </div>
 
-      <article class="phone" aria-label="Mobile web remote" data-connection-state="preview">
-        <div class="phone-status"><span>9:41</span><span>Wi-Fi&nbsp;&nbsp;100%</span></div>
-        <div class="phone-app">
-          <div class="phone-head"><span></span><strong>TouchDock</strong><button class="icon-button" id="phoneSettings" aria-label="Session settings">...</button></div>
-          <div class="connection-line" id="mobileConnection" data-state="preview" role="status" aria-live="polite"><i></i><span id="mobileStatus">Preview only</span></div>
-          <div class="remote-gate" id="remoteGate"><span id="remoteGateText">Remote commands are disabled in preview.</span><button id="remoteGateAction">Start</button></div>
-          <div class="mobile-tabs" role="tablist" aria-label="Remote controls" aria-orientation="horizontal"><button class="mobile-tab active" id="trackpad-tab" role="tab" data-mobile-tab="trackpad" data-remote-action aria-controls="trackpad-panel" aria-selected="true" tabindex="0">Trackpad</button><button class="mobile-tab" id="keys-tab" role="tab" data-mobile-tab="keys" data-remote-action aria-controls="keys-panel" aria-selected="false" tabindex="-1">Keys</button><button class="mobile-tab" id="shortcuts-tab" role="tab" data-mobile-tab="shortcuts" data-remote-action aria-controls="shortcuts-panel" aria-selected="false" tabindex="-1">Shortcuts</button></div>
-          <section class="mobile-panel active" id="trackpad-panel" data-mobile-panel="trackpad" role="tabpanel" aria-labelledby="trackpad-tab">
-            <div class="trackpad" id="trackpad" tabindex="-1" aria-disabled="true" aria-label="Interactive trackpad"><div class="cursor-dot" id="cursorDot"></div><div class="scroll-rail" aria-label="Scroll area"><div class="scroll-thumb" id="scrollThumb"></div></div></div>
-            <div class="click-row"><button class="click-button" data-action="Left click" data-remote-action disabled>Left click</button><button class="click-button" data-action="Right click" data-remote-action disabled>Right click</button></div><p class="feedback" id="feedback" aria-live="polite">Connect to enable remote control</p>
+            <div class="pairing-copy">
+              <div>
+                <h2 id="pairingTitle">Scan to pair</h2>
+                <p id="pairingDescription">Your phone opens the controller directly in its browser. Keep both devices on the same Wi-Fi network.</p>
+              </div>
+
+              <dl class="connection-details">
+                <div><dt>Address</dt><dd id="serviceAddress">Starting…</dd></div>
+                <div><dt>Session</dt><dd id="sessionValue">Waiting</dd></div>
+                <div><dt>Channel</dt><dd><span class="secure-dot" aria-hidden="true"></span>Encrypted</dd></div>
+              </dl>
+
+              <div class="actions">
+                <button class="button secondary" id="copyAddressButton" type="button" disabled>
+                  <span aria-hidden="true">▣</span><span id="copyLabel">Copy address</span>
+                </button>
+                <button class="button secondary" id="refreshCodeButton" type="button" disabled>
+                  <span aria-hidden="true">↻</span>New code
+                </button>
+              </div>
+            </div>
           </section>
-          <section class="mobile-panel key-panel" id="keys-panel" data-mobile-panel="keys" role="tabpanel" aria-labelledby="keys-tab" hidden>
-            <input class="keyboard-input" id="keyboardInput" data-remote-action aria-label="Type on Mac" placeholder="Type on your Mac..." disabled>
-            <div class="modifiers"><button class="modifier" data-key-label="Command" data-remote-action aria-label="Command" title="Command" disabled>⌘</button><button class="modifier" data-key-label="Option" data-remote-action aria-label="Option" title="Option" disabled>⌥</button><button class="modifier" data-key-label="Shift" data-remote-action aria-label="Shift" title="Shift" disabled>⇧</button></div>
-            <div class="key-cluster"><button class="key up" data-action="Arrow up" data-remote-action aria-label="Arrow up" title="Arrow up" disabled>↑</button><button class="key left" data-action="Arrow left" data-remote-action aria-label="Arrow left" title="Arrow left" disabled>←</button><button class="key down" data-action="Arrow down" data-remote-action aria-label="Arrow down" title="Arrow down" disabled>↓</button><button class="key right" data-action="Arrow right" data-remote-action aria-label="Arrow right" title="Arrow right" disabled>→</button></div>
-            <p class="feedback">Tap a key to send it instantly</p>
+
+          <section class="readiness" aria-labelledby="readinessTitle">
+            <div class="section-heading"><h2 id="readinessTitle">Readiness</h2><span id="readinessSummary">Checking system access</span></div>
+            <div class="readiness-list">
+              <div class="readiness-row">
+                <span class="check-state" id="networkCheck" aria-hidden="true">…</span>
+                <span><strong>Local network</strong><small id="networkDetail">Finding a Wi-Fi address</small></span>
+                <em id="networkState">Checking</em>
+              </div>
+              <div class="readiness-row">
+                <span class="check-state" id="inputCheck" aria-hidden="true">…</span>
+                <span><strong>Input control</strong><small id="inputDetail">Checking operating system permission</small></span>
+                <em id="inputState">Checking</em>
+              </div>
+            </div>
           </section>
-          <section class="mobile-panel" id="shortcuts-panel" data-mobile-panel="shortcuts" role="tabpanel" aria-labelledby="shortcuts-tab" hidden><div class="shortcuts-grid"><button class="shortcut" data-action="App switcher" data-remote-action disabled><b>CMD TAB</b><span>Switch apps</span><small>Command + Tab</small></button><button class="shortcut" data-action="Spotlight" data-remote-action disabled><b>SEARCH</b><span>Spotlight</span><small>Command + Space</small></button><button class="shortcut" data-action="Mission Control" data-remote-action disabled><b>UP</b><span>Mission Control</span><small>Control + Up</small></button><button class="shortcut" data-action="Show desktop" data-remote-action disabled><b>DESK</b><span>Show desktop</span><small>Fn + F11</small></button><button class="shortcut" data-action="Mute" data-remote-action disabled><b>MUTE</b><span>Mute audio</span><small>System</small></button><button class="shortcut" id="lockMacButton" data-action="Lock screen" data-remote-action disabled><b>LOCK</b><span>Lock Mac</span><small>Control + Command + Q</small></button></div></section>
-        </div>
-      </article>
-    </section>
-  </main>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <dialog id="settingsDialog" aria-labelledby="settingsDialogTitle"><div class="dialog-body"><h2 id="settingsDialogTitle">Session settings</h2><p>Review the current local connection and end it from this phone.</p><div class="dialog-detail"><span><b>Status</b><em id="dialogSessionStatus">Preview only</em></span><span><b>Security</b><em>Local network session</em></span><span><b>Input access</b><em id="dialogInputStatus">Disabled</em></span></div></div><div class="dialog-actions"><button class="dialog-secondary" data-close-dialog="settingsDialog">Close</button><button class="dialog-danger" id="dialogDisconnect" disabled>Disconnect phone</button></div></dialog>
-  <dialog id="lockDialog" aria-labelledby="lockDialogTitle"><div class="dialog-body"><h2 id="lockDialogTitle">Lock this Mac?</h2><p>The active Mac session will lock immediately. You will need the Mac password or Touch ID to resume.</p></div><div class="dialog-actions"><button class="dialog-secondary" data-close-dialog="lockDialog">Cancel</button><button class="dialog-danger" id="confirmLock">Lock Mac</button></div></dialog>
-  <script>
-    const connectionStates = {
-      preview: {
-        label: 'Preview', pairTitle: 'Explore the pairing flow',
-        pairDescription: 'This is a safe prototype. The demo code does not open a real session.',
-        pairButton: 'Show pairing code', demoButton: 'Begin demo', mobileStatus: 'Preview only',
-        gateText: 'Remote commands are disabled in preview.', gateButton: 'Start',
-        deviceCount: 'None', deviceName: 'No active session', deviceMeta: 'Prototype data only', latency: '--',
-        toast: 'Safe preview mode'
-      },
-      ready: {
-        label: 'Ready', pairTitle: 'Scan to connect',
-        pairDescription: 'Use the demo control to simulate a secure one-time pairing request.',
-        pairButton: 'Connect demo', demoButton: 'Connect demo', mobileStatus: 'Not connected',
-        gateText: 'Connect before sending remote commands.', gateButton: 'Connect',
-        deviceCount: 'None', deviceName: 'Waiting for phone', deviceMeta: 'One-time code is ready', latency: '--',
-        toast: 'Pairing code ready'
-      },
-      connecting: {
-        label: 'Connecting', pairTitle: 'Securing local session',
-        pairDescription: 'Verifying the one-time code and Mac permissions. No commands are sent yet.',
-        pairButton: 'Connecting...', demoButton: 'Complete connection', mobileStatus: 'Connecting securely',
-        gateText: 'Verifying this phone and the local network.', gateButton: 'Wait',
-        deviceCount: 'Pending', deviceName: 'iPhone 15 Pro', deviceMeta: 'Verifying one-time code', latency: '--',
-        toast: 'Securing local connection'
-      },
-      connected: {
-        label: 'Connected', pairTitle: 'iPhone connected',
-        pairDescription: 'Remote controls are enabled. The encrypted session stays on your local network.',
-        pairButton: 'Disconnect', demoButton: 'Simulate interruption', mobileStatus: 'Connected to Demo MacBook',
-        gateText: '', gateButton: '',
-        deviceCount: '1 connected', deviceName: 'iPhone 15 Pro', deviceMeta: 'Safari - 192.168.1.105', latency: '7 ms',
-        toast: 'Phone connected securely'
-      },
-      interrupted: {
-        label: 'Interrupted', pairTitle: 'Connection interrupted',
-        pairDescription: 'No commands are being sent. Reconnect to restore this local session.',
-        pairButton: 'Reconnect', demoButton: 'Reset demo', mobileStatus: 'Connection interrupted',
-        gateText: 'Remote commands are paused until reconnection.', gateButton: 'Reconnect',
-        deviceCount: '1 paused', deviceName: 'iPhone 15 Pro', deviceMeta: 'Last seen just now', latency: 'Offline',
-        toast: 'Connection interrupted - commands paused'
-      },
-      failed: {
-        label: 'Failed', pairTitle: 'Pairing failed',
-        pairDescription: 'The one-time code expired before the secure session opened. Generate a fresh request and try again.',
-        pairButton: 'Try again', demoButton: 'Reset demo', mobileStatus: 'Pairing failed',
-        gateText: 'Pairing failed. No remote commands were sent.', gateButton: 'Try again',
-        deviceCount: 'None', deviceName: 'No active session', deviceMeta: 'One-time code expired', latency: '--',
-        toast: 'Pairing failed - try a fresh code'
-      }
-    };
-    let connectionState = 'preview';
-    let connectionTimer;
-    let toastTimer;
-    const $ = (selector, root = document) => root.querySelector(selector);
-    const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+          <details class="connection-help">
+            <summary>Phone cannot open the page?</summary>
+            <p>Allow TouchDock in System Settings → Privacy & Security → Local Network, confirm both devices use the same Wi-Fi, and temporarily disconnect VPN software. Some guest networks block communication between devices.</p>
+          </details>
+        </section>
 
-    function buildQr() {
-      const qr = $('#qr');
-      const finder = (x, y, ox, oy) => x >= ox && x < ox + 7 && y >= oy && y < oy + 7 && (x === ox || x === ox + 6 || y === oy || y === oy + 6 || (x >= ox + 2 && x <= ox + 4 && y >= oy + 2 && y <= oy + 4));
-      for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) {
-        const cell = document.createElement('i');
-        const fixed = finder(x,y,0,0) || finder(x,y,14,0) || finder(x,y,0,14);
-        if (fixed || (!((x < 8 && y < 8) || (x > 12 && y < 8) || (x < 8 && y > 12)) && ((x * 3 + y * 5 + x * y) % 7 < 3))) cell.className = 'on';
-        qr.appendChild(cell);
-      }
-    }
+        <section class="view" id="securityView" data-view-panel="security" hidden>
+          <header class="page-header">
+            <div><h1>Security</h1><p>Current pairing and command-channel protections.</p></div>
+          </header>
 
-    function showToast(message) {
-      const toast = $('#toast'); toast.textContent = message; toast.classList.add('show');
-      clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 1400);
-    }
+          <section class="security-section">
+            <div class="security-row"><span class="security-symbol" aria-hidden="true">1×</span><span><strong>Single-use pairing</strong><small>The QR token expires after two minutes and rotates after every session.</small></span><em>On</em></div>
+            <div class="security-row"><span class="security-symbol" aria-hidden="true">⇄</span><span><strong>Authenticated encryption</strong><small>P-256 key agreement with directional AES-256-GCM command channels.</small></span><em>On</em></div>
+            <div class="security-row"><span class="security-symbol" aria-hidden="true">⌂</span><span><strong>Local network only</strong><small>The controller service is not published to the internet.</small></span><em>On</em></div>
+            <div class="security-row"><span class="security-symbol" aria-hidden="true">≡</span><span><strong>Command allowlist</strong><small>Only validated pointer, keyboard, text and approved shortcut commands are accepted.</small></span><em>On</em></div>
+          </section>
 
-    function setConnectionState(next, options = {}) {
-      const config = connectionStates[next];
-      if (!config) return;
-      clearTimeout(connectionTimer);
-      connectionState = next;
-      const isConnected = next === 'connected';
-      const isConnecting = next === 'connecting';
-      const status = $('#desktopStatus');
-      status.dataset.state = next;
-      $('span', status).textContent = config.label;
-      $('#mobileConnection').dataset.state = next;
-      $('.phone').dataset.connectionState = next;
-      $('#statePicker').value = next;
-      $('#pairTitle').textContent = config.pairTitle;
-      $('#pairDescription').textContent = config.pairDescription;
-      $('#pairButton').textContent = config.pairButton;
-      $('#pairButton').disabled = isConnecting;
-      $('#demoConnection').textContent = config.demoButton;
-      $('#deviceCount').textContent = config.deviceCount;
-      $('#deviceName').textContent = config.deviceName;
-      $('#deviceMeta').textContent = config.deviceMeta;
-      $('#latency').textContent = config.latency;
-      $('#mobileStatus').textContent = config.mobileStatus;
-      $('#devicesEmpty').textContent = isConnected ? 'iPhone 15 Pro is active' : config.deviceName;
-      $('#remoteGate').hidden = isConnected;
-      $('#remoteGateText').textContent = config.gateText;
-      $('#remoteGateAction').textContent = config.gateButton;
-      $('#remoteGateAction').disabled = isConnecting;
-      $$('[data-remote-action]').forEach(control => { control.disabled = !isConnected; });
-      $('#trackpad').setAttribute('aria-disabled', String(!isConnected));
-      $('#trackpad').tabIndex = isConnected ? 0 : -1;
-      $('#feedback').textContent = isConnected ? 'Move your pointer over the trackpad' : config.gateText;
-      $('#dialogSessionStatus').textContent = config.label;
-      $('#dialogInputStatus').textContent = isConnected ? 'Enabled' : 'Disabled';
-      $('#dialogDisconnect').disabled = !isConnected;
-      if (!isConnected) $$('.modifier').forEach(button => button.classList.remove('active'));
-      if (options.announce !== false) showToast(config.toast);
-    }
+          <section class="security-note">
+            <strong>Local HTTP boundary</strong>
+            <p>Commands are encrypted after pairing. The initial phone page is delivered over local HTTP until trusted local TLS is added.</p>
+          </section>
+        </section>
+      </main>
+    </div>
 
-    function beginConnection() {
-      if (connectionState === 'connecting') return;
-      setConnectionState('connecting');
-      connectionTimer = setTimeout(() => setConnectionState('connected'), 900);
-    }
-
-    function handlePrimaryStateAction() {
-      if (connectionState === 'preview') return setConnectionState('ready');
-      if (connectionState === 'ready' || connectionState === 'interrupted' || connectionState === 'failed') return beginConnection();
-      if (connectionState === 'connecting') return setConnectionState('connected');
-      if (connectionState === 'connected') return setConnectionState('ready');
-    }
-
-    $$('.nav-item').forEach(button => button.addEventListener('click', () => {
-      $$('.nav-item').forEach(item => item.classList.toggle('active', item === button));
-      $$('.desktop-page').forEach(page => page.classList.toggle('active', page.dataset.pageContent === button.dataset.page));
-    }));
-
-    const mobileTabs = $$('.mobile-tab');
-    function activateMobileTab(tab, { focus = false } = {}) {
-      if (!tab || tab.disabled) return;
-      mobileTabs.forEach(item => {
-        const active = item === tab;
-        item.classList.toggle('active', active);
-        item.setAttribute('aria-selected', String(active));
-        item.tabIndex = active ? 0 : -1;
-      });
-      $$('.mobile-panel').forEach(panel => {
-        const active = panel.id === tab.getAttribute('aria-controls');
-        panel.classList.toggle('active', active);
-        panel.hidden = !active;
-      });
-      if (focus) tab.focus();
-    }
-
-    mobileTabs.forEach(tab => {
-      tab.addEventListener('click', () => activateMobileTab(tab));
-      tab.addEventListener('keydown', event => {
-        const currentIndex = mobileTabs.indexOf(tab);
-        let nextIndex;
-        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % mobileTabs.length;
-        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + mobileTabs.length) % mobileTabs.length;
-        if (event.key === 'Home') nextIndex = 0;
-        if (event.key === 'End') nextIndex = mobileTabs.length - 1;
-        if (nextIndex === undefined) return;
-        event.preventDefault();
-        activateMobileTab(mobileTabs[nextIndex], { focus: true });
-      });
-    });
-
-    const trackpad = $('#trackpad'); const cursor = $('#cursorDot'); const thumb = $('#scrollThumb');
-    let cursorFrame = 0;
-    let pendingPointer;
-    let trackpadRect;
-
-    function refreshTrackpadRect() {
-      trackpadRect = trackpad.getBoundingClientRect();
-    }
-
-    function renderCursor() {
-      cursorFrame = 0;
-      if (connectionState !== 'connected' || !pendingPointer) return;
-      if (!trackpadRect) refreshTrackpadRect();
-      const { clientX, clientY } = pendingPointer;
-      pendingPointer = undefined;
-      const x = Math.max(10, Math.min(trackpadRect.width - 34, clientX - trackpadRect.left));
-      const y = Math.max(10, Math.min(trackpadRect.height - 10, clientY - trackpadRect.top));
-      cursor.style.left = x + 'px'; cursor.style.top = y + 'px';
-      $('#feedback').textContent = 'Pointer ' + Math.round(x) + ', ' + Math.round(y);
-    }
-
-    function queueCursorMove(event) {
-      pendingPointer = { clientX: event.clientX, clientY: event.clientY };
-      if (!cursorFrame) cursorFrame = requestAnimationFrame(renderCursor);
-    }
-
-    trackpad.addEventListener('pointerenter', () => { if (connectionState === 'connected') refreshTrackpadRect(); });
-    trackpad.addEventListener('pointermove', event => { if (connectionState === 'connected') queueCursorMove(event); });
-    trackpad.addEventListener('pointerdown', event => {
-      if (connectionState !== 'connected') return showToast('Connect before using the trackpad');
-      refreshTrackpadRect();
-      trackpad.setPointerCapture(event.pointerId); cursor.classList.add('active'); queueCursorMove(event);
-    });
-    trackpad.addEventListener('pointerup', () => {
-      if (connectionState !== 'connected') return;
-      cursor.classList.remove('active'); showToast('Click sent to Mac');
-    });
-    trackpad.addEventListener('wheel', event => {
-      if (connectionState !== 'connected') return;
-      event.preventDefault();
-      const current = Number(thumb.dataset.y || 0);
-      const next = Math.max(-80, Math.min(150, current + Math.sign(event.deltaY) * 18));
-      thumb.dataset.y = next; thumb.style.transform = 'translateY(' + next + 'px)';
-      $('#feedback').textContent = event.deltaY > 0 ? 'Scroll down' : 'Scroll up';
-    }, { passive: false });
-    trackpad.addEventListener('keydown', event => {
-      if (connectionState === 'connected' && (event.key === 'Enter' || event.key === ' ')) {
-        event.preventDefault(); showToast('Click sent to Mac');
-      }
-    });
-    window.addEventListener('resize', () => { trackpadRect = undefined; });
-    window.addEventListener('scroll', () => { trackpadRect = undefined; }, { passive: true });
-
-    $$('[data-action]').forEach(button => button.addEventListener('click', () => {
-      if (connectionState !== 'connected') return;
-      if (button.id === 'lockMacButton') return $('#lockDialog').showModal();
-      showToast(button.dataset.action + ' sent');
-    }));
-    $$('.modifier').forEach(button => button.addEventListener('click', () => {
-      if (connectionState !== 'connected') return;
-      button.classList.toggle('active');
-      showToast(button.dataset.keyLabel + (button.classList.contains('active') ? ' held' : ' released'));
-    }));
-    $('#keyboardInput').addEventListener('input', event => {
-      if (connectionState === 'connected' && event.target.value) showToast('Typed: ' + event.target.value.slice(-12));
-    });
-    $('#pairButton').addEventListener('click', handlePrimaryStateAction);
-    $('#remoteGateAction').addEventListener('click', handlePrimaryStateAction);
-    $('#demoConnection').addEventListener('click', () => {
-      if (connectionState === 'connected') return setConnectionState('interrupted');
-      if (connectionState === 'interrupted' || connectionState === 'failed') return setConnectionState('ready');
-      handlePrimaryStateAction();
-    });
-    $('#statePicker').addEventListener('change', event => setConnectionState(event.target.value));
-    $('#phoneSettings').addEventListener('click', () => $('#settingsDialog').showModal());
-    $('#dialogDisconnect').addEventListener('click', () => { $('#settingsDialog').close(); setConnectionState('ready'); });
-    $$('[data-close-dialog]').forEach(button => button.addEventListener('click', () => $('#' + button.dataset.closeDialog).close()));
-    $('#confirmLock').addEventListener('click', () => { $('#lockDialog').close(); showToast('Mac locked - demo only'); });
-    buildQr();
-    setConnectionState('preview', { announce: false });
-  </script>
-</body>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/desktop.js"></script>
+  </body>
 </html>

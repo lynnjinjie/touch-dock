@@ -3,6 +3,7 @@ node_modules/
 dist/
 src-tauri/target/
 src-tauri/gen/
+tools/windows-driver-check/target/
 .impeccable/config.local.json
 .impeccable/critique/
 .impeccable/live/

@@ -6,19 +6,19 @@ product
 
 ## Platform
 
-web
+Tauri 2 desktop application for macOS and Windows, with an embedded mobile web controller.
 
 ## Users
 
-TouchDock serves people who want to control a nearby Mac from a phone without installing a mobile app. The primary user is sitting or presenting within the same local network and needs a convenient remote trackpad, keyboard, directional controls, or shortcuts. The Mac companion and mobile web controller are two parts of the same product experience.
+TouchDock serves people who want to control a nearby Mac or Windows PC from a phone without installing a mobile app. The primary user is sitting or presenting within the same local network and needs a convenient remote trackpad, keyboard, directional controls, or shortcuts. The desktop companion and mobile web controller are two parts of the same product experience.
 
 ## Product Purpose
 
-TouchDock turns a phone browser into a dependable local remote for a Mac. The Mac app exposes a secure pairing QR code and connection status; the mobile web interface provides immediate pointer, click, scroll, keyboard, and shortcut control. Success means pairing takes seconds, input feels responsive, and the connection state is always understandable.
+TouchDock turns a phone browser into a dependable local remote for a computer. The desktop app exposes a secure pairing QR code and connection status; the mobile web interface provides immediate pointer, click, scroll, keyboard, and shortcut control. Success means pairing takes seconds, input feels responsive, ordinary lock-screen interruptions recover without another scan, and the connection state is always understandable.
 
 ## Positioning
 
-The fastest, most direct way to turn the phone already in your hand into a private Mac remote on the same network.
+The fastest, most direct way to turn the phone already in your hand into a private computer remote on the same network.
 
 ## Brand Personality
 
@@ -35,6 +35,7 @@ Avoid generic admin dashboards, gaming-control aesthetics, excessive black-and-n
 - Preserve muscle memory through familiar trackpad, keyboard, and system-control conventions.
 - Use immediate, restrained feedback so every gesture feels acknowledged without becoming distracting.
 - Keep advanced controls close but secondary to pointer movement and essential navigation.
+- Treat lock screen and browser suspension as normal interruptions: show `Connection paused` with a clear `Reconnect` action when a secure resume credential is available.
 
 ## Accessibility & Inclusion
 
