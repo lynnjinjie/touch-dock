@@ -7,6 +7,7 @@
     "dev": "pnpm run build:mobile && vite",
     "build": "tsc && pnpm run build:mobile && vite build",
     "build:mobile": "esbuild mobile-src/app.js --bundle --format=esm --minify --outfile=mobile/app.js",
+    "check:release-version": "node tools/validate-release-version.mjs",
     "test:mobile": "node --test mobile-src/crypto.test.js mobile-src/input-behavior.test.js",
     "preview": "vite preview",
     "tauri": "tauri"

@@ -112,7 +112,20 @@ The command channel is authenticated and encrypted at the application layer even
 
 1. Add explicit confirmation tokens for destructive system actions.
 2. Add trusted mobile asset delivery or authenticated local TLS.
-3. Add signed installers and cross-platform CI.
+3. Add production code signing and notarization for release installers.
+
+## Continuous Integration and Releases
+
+GitHub Actions runs the frontend build, mobile controller tests, and Rust tests on macOS and Windows for every push and pull request.
+
+To publish a release, update the version in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, commit the change, then push a matching version tag:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release workflow builds TouchDock for Apple Silicon macOS, Intel macOS, and Windows, then creates a GitHub Release and uploads the installers. Unsigned artifacts can be built without repository secrets. Production distribution should configure the Apple and Windows signing credentials described by the Tauri signing documentation.
 
 ## Connection Lifecycle
 
