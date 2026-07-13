@@ -5,6 +5,12 @@ This file follows the versioned format used by GitHub Releases and Conventional 
 
 ## Unreleased
 
+### Build
+
+- publish macOS releases for Apple Silicon only
+- build macOS release artifacts without Apple signing secrets until valid Developer ID credentials are configured
+- allow an existing release tag to be rerun manually for an Apple Silicon-only artifact repair
+
 ## [v0.2.0](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.0) - 2026-07-13
 
 ### Features
@@ -34,7 +40,7 @@ This file follows the versioned format used by GitHub Releases and Conventional 
 ### Build
 
 - run frontend, mobile controller, and Rust tests on macOS and Windows for every push and pull request
-- build Apple Silicon macOS, Intel macOS, and Windows installers for version tags
+- add tagged GitHub Release packaging for macOS and Windows
 - generate grouped GitHub Release notes from Conventional Commit history with commit and full-changelog links
 
 ### Documentation

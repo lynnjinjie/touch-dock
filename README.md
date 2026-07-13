@@ -128,7 +128,7 @@ git tag v0.2.0
 git push origin v0.2.0
 ```
 
-The release workflow builds TouchDock for Apple Silicon macOS, Intel macOS, and Windows, then creates a GitHub Release and uploads the installers. Release notes are generated from Conventional Commit subjects, grouped by change type, linked to each commit, and finished with a full comparison link. Unsigned artifacts can be built without repository secrets. Production distribution should configure the Apple and Windows signing credentials described by the Tauri signing documentation.
+The release workflow builds TouchDock for Apple Silicon macOS and Windows, then creates a GitHub Release and uploads the installers. Release notes are generated from Conventional Commit subjects, grouped by change type, linked to each commit, and finished with a full comparison link. The workflow can also be run manually with an existing tag to rebuild only its Apple Silicon artifact. The macOS artifact is currently unsigned so releases are not blocked by unavailable or invalid Apple certificates. Production distribution should configure valid Apple and Windows signing credentials described by the Tauri signing documentation.
 
 TouchDock checks `https://github.com/lynnjinjie/touch-dock/releases/latest` at startup no more than once every 24 hours. The check runs in Rust, accepts only HTTPS release URLs for this repository, and exposes only the validated version and URL to the frontend. Manual checks in Settings bypass the interval; opening an update is restricted by Tauri capability scope to this repository's Release pages.
 

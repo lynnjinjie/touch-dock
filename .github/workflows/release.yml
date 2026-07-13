@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing version tag to package
+        required: true
+        default: v0.2.0
 permissions:
   contents: write
 
@@ -13,6 +19,7 @@ concurrency:
 
 env:
   CI: true
+  RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
 
 jobs:
   publish:
@@ -21,25 +28,32 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        target:
+          - macos
+          - windows
+        manual:
+          - ${{ github.event_name == 'workflow_dispatch' }}
         include:
-          - platform: macOS (Apple Silicon)
+          - target: macos
+            platform: macOS (Apple Silicon)
             os: macos-latest
             rust-target: aarch64-apple-darwin
             args: --target aarch64-apple-darwin
-          - platform: macOS (Intel)
-            os: macos-latest
-            rust-target: x86_64-apple-darwin
-            args: --target x86_64-apple-darwin
-          - platform: Windows
+          - target: windows
+            platform: Windows
             os: windows-latest
             rust-target: x86_64-pc-windows-msvc
             args: ""
+        exclude:
+          - target: windows
+            manual: true
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -60,6 +74,8 @@ jobs:
 
       - name: Validate release tag
         run: pnpm check:release-version
+        env:
+          GITHUB_REF_NAME: ${{ env.RELEASE_TAG }}
 
       - name: Build frontend
         run: pnpm build
@@ -73,6 +89,8 @@ jobs:
       - name: Generate release notes
         id: release_notes
         shell: bash
+        env:
+          GITHUB_REF_NAME: ${{ env.RELEASE_TAG }}
         run: |
           {
             echo 'body<<TOUCHDOCK_RELEASE_NOTES'
@@ -84,15 +102,9 @@ jobs:
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: TouchDock ${{ github.ref_name }}
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseName: TouchDock ${{ env.RELEASE_TAG }}
           releaseBody: ${{ steps.release_notes.outputs.body }}
           generateReleaseNotes: false
           releaseDraft: false
