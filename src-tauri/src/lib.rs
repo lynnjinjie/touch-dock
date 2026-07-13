@@ -4,6 +4,7 @@ mod input;
 mod platform;
 mod protocol;
 mod server;
+mod updates;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod tray;
 
@@ -40,9 +41,15 @@ fn set_control_layout(
         .map_err(|error| error.to_string())
 }
 
+#[tauri::command]
+async fn latest_release() -> Result<Option<updates::LatestRelease>, String> {
+    updates::latest_release().await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let driver = platform::create_input_driver();
             let config_path = app.path().app_config_dir()?.join("control-layout.json");
@@ -65,7 +72,8 @@ pub fn run() {
             refresh_pairing_code,
             request_input_permission,
             control_layout,
-            set_control_layout
+            set_control_layout,
+            latest_release
         ])
         .run(tauri::generate_context!())
         .expect("failed to run TouchDock");

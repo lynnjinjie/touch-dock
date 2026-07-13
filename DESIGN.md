@@ -196,11 +196,23 @@ Components are restrained and precise: familiar silhouettes, clear state changes
 
 Desktop navigation uses a persistent quiet sidebar with 44px rows and a Signal Wash selected state. Mobile navigation uses three stable 44px tabs above the active control surface; core functionality never hides behind hover.
 
+The desktop Settings button sits in the service footer. A small Signal Teal dot may appear at its upper-right corner only when a newer release is available. The dot supplements an accessible update label and the full version message in Settings; it is never the sole indication.
+
 ### Trackpad
 
-The trackpad is the largest mobile region. It uses a low-contrast measurement dot field because it is an actual input canvas, a visible pointer-feedback ring, and a separate scroll region. A vertical separator adjusts the pointer and scroll widths from a 24px drag target; the scroll indicator stays centered within the complete visible scroll region. Pointer speed is adjustable and persisted locally.
+The trackpad is the largest mobile region. It uses a low-contrast measurement dot field because it is an actual input canvas, a visible pointer-feedback ring, and a separate scroll region. The scroll indicator stays centered within its fixed visible region. Pointer and scroll speed are configured on the desktop and persisted with the controller layout. Optional left click, right click, and modifier rows can be hidden. The phone consumes this configuration without depending on Tauri APIs.
 
 Short taps produce native clicks, two taps produce a native double click, and holding a click or key control sends one `down` until release sends `up`. iOS text selection, touch callouts, and double-tap page zoom stay disabled on direct-manipulation controls.
+
+### Control Layout
+
+The desktop layout editor uses stable tabs for Trackpad, Keys, and Actions with a compact phone preview. Keys and actions support explicit visibility and ordering. Custom actions are edited in a modal: a user names the action, selects zero to four modifiers, then records one main key. Recording captures at the window level while active, gives immediate visible feedback, and stops when the user returns to a text field.
+
+The mobile Actions view remains a compact two-column grid that preserves the desktop order. Labels are localized by the desktop language setting, while user-authored names remain unchanged.
+
+### Settings And Updates
+
+Settings uses a two-column native preferences layout with General and Appearance sections. General contains app version, update state, manual update checking, and language. Appearance contains Light, Dark, and Follow System. Automatic update checks are silent, occur at startup no more than once every 24 hours, and never interrupt an active remote session.
 
 ### Connection Recovery
 

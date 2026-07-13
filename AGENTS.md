@@ -10,6 +10,7 @@ Build TouchDock as a secure, low-latency local remote for macOS and Windows. A p
 - The Tauri desktop frontend uses React and TypeScript in `src/App.tsx`, with its visual system in `src/App.css`.
 - Pairing, encrypted WebSocket transport, 24-hour session recovery, QR generation, mobile hosting, and macOS/Windows input injection are implemented.
 - The desktop UI reflects live service, permission, token-expiry, and session state.
+- Persistent controller layouts, custom shortcut recording, bilingual UI, themes, tray access, and GitHub Release checks are implemented.
 
 ## Architecture Boundaries
 
@@ -19,6 +20,7 @@ Build TouchDock as a secure, low-latency local remote for macOS and Windows. A p
 - Use Win32 SendInput and explicit UIPI error handling only in the Windows module.
 - Keep the mobile controller transport-agnostic and free of Tauri-only APIs.
 - Do not let frontend messages invoke arbitrary Rust functions, shell commands, or raw key codes.
+- Keep release checks in Rust, accept only validated HTTPS URLs for the TouchDock GitHub repository, and keep opener permissions narrowly scoped.
 
 ## Security Invariants
 
@@ -67,5 +69,7 @@ Before finishing a change, run the smallest relevant checks. For changes crossin
 
 - `src-tauri/capabilities/default.json` should stay minimal; justify new permissions.
 - `src-tauri/tauri.conf.json` owns desktop window, bundle, CSP, and build configuration.
+- Keep the application version synchronized in `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json` before creating a release tag.
+- Use Conventional Commit subjects so `tools/generate-release-notes.mjs` can produce grouped GitHub Release notes.
 - Project-level agent skills live under `.agents/skills` and are tracked by `skills-lock.json`.
 - Generated folders such as `dist`, `node_modules`, `src-tauri/target`, and local Impeccable sessions are ignored.

@@ -2,12 +2,16 @@ import { Monitor, Moon, Palette, SlidersHorizontal, Sun, X } from "lucide-react"
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import type { ThemePreference } from "./theme";
 import { createTranslator, type LanguagePreference } from "./i18n";
+import type { UpdateState } from "./update";
 
 interface SettingsDialogProps {
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
   language: LanguagePreference;
   onLanguageChange: (language: LanguagePreference) => void;
+  updateState: UpdateState;
+  onCheckForUpdates: () => void;
+  onOpenUpdate: () => void;
   onClose: () => void;
 }
 
@@ -17,12 +21,19 @@ const themes = [
   { value: "system", label: "system", Icon: Monitor },
 ] as const;
 
-export function SettingsDialog({ theme, onThemeChange, language, onLanguageChange, onClose }: SettingsDialogProps) {
+export function SettingsDialog({ theme, onThemeChange, language, onLanguageChange, updateState, onCheckForUpdates, onOpenUpdate, onClose }: SettingsDialogProps) {
   const [section, setSection] = useState<"general" | "appearance">("general");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const languageRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const t = createTranslator(language);
+  const updateDescription = updateState.status === "available"
+    ? t("newVersionAvailable", { version: updateState.latestVersion ?? "" })
+    : updateState.status === "current"
+      ? t("upToDate")
+      : updateState.status === "error"
+        ? t("updateCheckFailed")
+        : t("automaticUpdateChecks");
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -83,6 +94,14 @@ export function SettingsDialog({ theme, onThemeChange, language, onLanguageChang
           {section === "general" ? (
             <section className="settings-content" aria-labelledby="general-title">
               <header className="settings-page-header"><h3 id="general-title">{t("general")}</h3></header>
+              <div className="setting-row setting-row-horizontal">
+                <span className="setting-copy"><strong>{t("version", { version: updateState.currentVersion })}</strong><small aria-live="polite">{updateDescription}</small></span>
+                {updateState.status === "available" && updateState.releaseUrl ? (
+                  <button className="setting-action" type="button" onClick={onOpenUpdate}>{t("viewUpdate")}</button>
+                ) : (
+                  <button className="setting-action" type="button" disabled={updateState.status === "checking"} onClick={onCheckForUpdates}>{updateState.status === "checking" ? t("checkingForUpdates") : t("checkForUpdates")}</button>
+                )}
+              </div>
               <div className="setting-row setting-row-horizontal">
                 <span className="setting-copy"><strong>{t("language")}</strong><small>{t("languageDescription")}</small></span>
                 <div className="theme-options language-options" role="radiogroup" aria-label={t("language")}>

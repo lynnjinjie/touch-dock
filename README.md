@@ -2,15 +2,18 @@
 
 TouchDock turns a phone browser on the same local network into a trackpad and keyboard for a computer. The desktop application handles secure pairing, connection state, and operating-system input control. The phone opens the controller by scanning a QR code and requires no mobile app installation.
 
-> The repository includes a Rust LAN service, real QR pairing, a production mobile controller, short-lived single-use pairing tokens, encrypted session recovery, P-256 and AES-GCM application-layer encryption, and macOS and Windows input drivers. The React desktop UI reflects live native service state. Signed distribution and cross-platform CI are still in development.
+> The repository includes a Rust LAN service, real QR pairing, a production mobile controller, short-lived single-use pairing tokens, encrypted session recovery, P-256 and AES-GCM application-layer encryption, and macOS and Windows input drivers. The React desktop UI reflects live native service state, provides persistent controller configuration, and ships through cross-platform CI and tagged GitHub Releases. Production signing credentials are still required for trusted public distribution.
 
 ## Current Capabilities
 
 - Single-use QR pairing over the local network
 - Encrypted `Reconnect` after lock screen, browser suspension, or temporary network loss without another scan
-- Trackpad movement, adjustable pointer speed, left and right click, double click, hold, and scrolling
-- A draggable separator for resizing the pointer and scroll regions
-- Text entry, modifier keys, arrow keys, and common system shortcuts
+- Trackpad movement, configurable pointer and scroll speed, left and right click, double click, hold, and scrolling
+- Text entry, independently held modifier keys, arrow keys, configurable utility keys, and common shortcuts
+- Persistent desktop control-layout editor with reordering, visibility controls, custom single keys, multi-modifier shortcuts, and a mute action
+- English and Simplified Chinese interfaces with light, dark, and system themes
+- macOS menu-bar and Windows system-tray access for opening TouchDock and Settings
+- Startup update checks with 24-hour throttling, manual checks, and an update badge
 - Explicit connecting, active, interrupted, failed, and disconnected states
 - Platform input drivers for macOS and Windows
 
@@ -83,7 +86,7 @@ The Vite development server uses `http://127.0.0.1:1420/`.
 ├── src-tauri/                 Tauri configuration and Rust application
 │   ├── capabilities/          Minimum Tauri permission set
 │   ├── icons/                 Cross-platform application icons
-│   └── src/                   Rust entry points
+│   └── src/                   Rust service, input, layout, tray, and update modules
 ├── docs/protocol.md           WebSocket protocol and security boundaries
 ├── tools/                     Cross-target platform checks
 ├── PRODUCT.md                 Product definition
@@ -110,7 +113,7 @@ The command channel is authenticated and encrypted at the application layer even
 
 ## Roadmap
 
-1. Add explicit confirmation tokens for destructive system actions.
+1. Complete confirmed cross-platform system actions such as lock screen and media controls.
 2. Add trusted mobile asset delivery or authenticated local TLS.
 3. Add production code signing and notarization for release installers.
 
@@ -121,11 +124,13 @@ GitHub Actions runs the frontend build, mobile controller tests, and Rust tests 
 To publish a release, update the version in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, commit the change, then push a matching version tag:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
-The release workflow builds TouchDock for Apple Silicon macOS, Intel macOS, and Windows, then creates a GitHub Release and uploads the installers. Unsigned artifacts can be built without repository secrets. Production distribution should configure the Apple and Windows signing credentials described by the Tauri signing documentation.
+The release workflow builds TouchDock for Apple Silicon macOS, Intel macOS, and Windows, then creates a GitHub Release and uploads the installers. Release notes are generated from Conventional Commit subjects, grouped by change type, linked to each commit, and finished with a full comparison link. Unsigned artifacts can be built without repository secrets. Production distribution should configure the Apple and Windows signing credentials described by the Tauri signing documentation.
+
+TouchDock checks `https://github.com/lynnjinjie/touch-dock/releases/latest` at startup no more than once every 24 hours. The check runs in Rust, accepts only HTTPS release URLs for this repository, and exposes only the validated version and URL to the frontend. Manual checks in Settings bypass the interval; opening an update is restricted by Tauri capability scope to this repository's Release pages.
 
 ## Connection Lifecycle
 

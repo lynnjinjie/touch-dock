@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { LayoutPanelTop, Settings } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
@@ -7,6 +8,7 @@ import { SettingsDialog } from "./SettingsDialog";
 import { ControlLayoutView } from "./ControlLayoutView";
 import { createTranslator, readLanguagePreference, saveLanguagePreference, type LanguagePreference } from "./i18n";
 import { applyTheme, readThemePreference, saveThemePreference, watchSystemTheme, type ThemePreference } from "./theme";
+import { checkForUpdates, readCachedUpdateState, type UpdateState } from "./update";
 import appIcon from "../src-tauri/icons/128x128.png";
 
 type DriverStatus = "ready" | "permission_required" | "unsupported";
@@ -68,6 +70,7 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [theme, setTheme] = useState<ThemePreference>(readThemePreference);
   const [language, setLanguage] = useState<LanguagePreference>(readLanguagePreference);
+  const [updateState, setUpdateState] = useState<UpdateState>(readCachedUpdateState);
   const toastTimer = useRef<number | undefined>(undefined);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const t = useMemo(() => createTranslator(language), [language]);
@@ -120,9 +123,31 @@ function App() {
     return () => unlisten?.();
   }, []);
 
+  const checkUpdates = useCallback(async (force = false) => {
+    setUpdateState((current) => ({ ...current, status: "checking" }));
+    try {
+      setUpdateState(await checkForUpdates(force));
+    } catch {
+      setUpdateState((current) => ({ ...current, status: "error" }));
+    }
+  }, []);
+
+  useEffect(() => {
+    void checkUpdates(false);
+  }, [checkUpdates]);
+
   function closeSettings() {
     setSettingsOpen(false);
     window.setTimeout(() => settingsButtonRef.current?.focus(), 0);
+  }
+
+  async function openUpdate() {
+    if (!updateState.releaseUrl) return;
+    try {
+      await openUrl(updateState.releaseUrl);
+    } catch {
+      showToast(t("openUpdateFailed"));
+    }
   }
 
   const connected = info?.sessionActive ?? false;
@@ -204,8 +229,9 @@ function App() {
           <div className="sidebar-footer">
             <span className="service-light" aria-hidden="true"></span>
             <span className="service-copy"><strong>{connected ? t("connected") : networkReady ? t("serviceRunning") : info ? t("localOnly") : t("starting")}</strong><small>{address}</small></span>
-            <button ref={settingsButtonRef} className="settings-button" type="button" aria-label={t("settings")} title={t("settings")} onClick={() => setSettingsOpen(true)}>
+            <button ref={settingsButtonRef} className="settings-button" type="button" aria-label={updateState.status === "available" ? `${t("settings")}, ${t("updateAvailable")}` : t("settings")} title={t("settings")} onClick={() => setSettingsOpen(true)}>
               <Settings aria-hidden="true" size={15} strokeWidth={1.8} />
+              {updateState.status === "available" && <span className="settings-update-badge" aria-hidden="true"></span>}
             </button>
           </div>
         </aside>
@@ -231,7 +257,7 @@ function App() {
           )}
         </main>
       </div>
-      {settingsOpen && <SettingsDialog theme={theme} onThemeChange={setTheme} language={language} onLanguageChange={setLanguage} onClose={closeSettings} />}
+      {settingsOpen && <SettingsDialog theme={theme} onThemeChange={setTheme} language={language} onLanguageChange={setLanguage} updateState={updateState} onCheckForUpdates={() => void checkUpdates(true)} onOpenUpdate={() => void openUpdate()} onClose={closeSettings} />}
       <div className={`toast ${toast ? "show" : ""}`} role="status" aria-live="polite" key={toast?.id}>{toast?.message}</div>
     </>
   );

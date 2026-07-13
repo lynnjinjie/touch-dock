@@ -94,6 +94,16 @@ const en = {
   languageDescription: "Choose the display language for TouchDock.",
   english: "English",
   simplifiedChinese: "简体中文",
+  version: "Version {version}",
+  checkForUpdates: "Check for updates",
+  checkingForUpdates: "Checking…",
+  automaticUpdateChecks: "TouchDock checks for updates at startup, at most once every 24 hours.",
+  upToDate: "TouchDock is up to date.",
+  updateAvailable: "Update available",
+  newVersionAvailable: "Version {version} is available.",
+  updateCheckFailed: "Could not check for updates. Try again later.",
+  viewUpdate: "View update",
+  openUpdateFailed: "Could not open the update page.",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -124,6 +134,7 @@ const zhCN: Record<TranslationKey, string> = {
   commandAllowlistBody: "仅接受经过验证的鼠标、键盘、文本和已批准的快捷键命令。", on: "已启用", localHttpBoundary: "本地 HTTP 边界",
   localHttpBoundaryBody: "配对后命令会被加密。在加入可信本地 TLS 前，初始手机页面仍通过本地 HTTP 提供。",
   appearance: "外观", general: "通用", theme: "主题", themeDescription: "选择 TouchDock 在这台电脑上的显示外观。", light: "浅色", dark: "深色", system: "跟随系统", language: "语言", languageDescription: "选择 TouchDock 的显示语言。", english: "English", simplifiedChinese: "简体中文",
+  version: "版本 {version}", checkForUpdates: "检查更新", checkingForUpdates: "正在检查…", automaticUpdateChecks: "TouchDock 会在启动时检查更新，每 24 小时最多一次。", upToDate: "TouchDock 已是最新版本。", updateAvailable: "有可用更新", newVersionAvailable: "版本 {version} 已发布。", updateCheckFailed: "无法检查更新，请稍后重试。", viewUpdate: "查看更新", openUpdateFailed: "无法打开更新页面。",
 };
 
 const dictionaries = { en, "zh-CN": zhCN };

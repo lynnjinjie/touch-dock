@@ -3,5 +3,13 @@
   "identifier": "default",
   "description": "Minimum permissions for the TouchDock main window.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        { "url": "https://github.com/lynnjinjie/touch-dock/releases/**" }
+      ]
+    }
+  ]
 }

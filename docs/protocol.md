@@ -91,13 +91,15 @@ Supported command payloads:
 {"kind":"mouse_button","button":"left","state":"down"}
 {"kind":"scroll","dx":0,"dy":24}
 {"kind":"key","key":"arrow_up","state":"down"}
+{"kind":"modifier","modifier":"meta","state":"down"}
 {"kind":"shortcut","modifiers":["meta"],"key":"tab"}
+{"kind":"system","action":"mute"}
 {"kind":"text","text":"Hello"}
 ```
 
-Approved shortcuts are `meta + tab`, `meta + space`, `control + arrow_up`, and `function + f11`. Locking the computer remains absent from the generic protocol and requires a separately confirmed flow.
+Shortcut modifiers may contain a unique combination of `meta`, `control`, `alt`, and `shift`. Shortcut main keys are the letters A-Z, Tab, Space, Enter, Escape, Backspace, Delete, Arrow Up, Arrow Down, and F11. A custom action may also send any supported main key without modifiers through the ordinary `key` command. The only currently approved system action is `mute`; locking the computer remains absent from the input protocol until a separately confirmed flow is implemented.
 
-`click` is an atomic down/up pair. `click_state` carries the native click count used for trackpad double-click recognition. `mouse_button` and `key` preserve explicit state: holding a mobile control sends one `down`, release sends `up`, and no implicit `up` is inserted while the control remains held. The macOS driver marks the second click-button down/up pair within 500ms with native click count 2; Windows uses the operating system's native double-click sequence. The server releases any tracked held inputs when a session disconnects.
+`click` is an atomic down/up pair. `click_state` carries the native click count used for trackpad double-click recognition. `mouse_button`, `key`, and `modifier` preserve explicit state: holding a mobile control sends one `down`, release sends `up`, and no implicit `up` is inserted while the control remains held. The macOS driver marks the second click-button down/up pair within 500ms with native click count 2; Windows uses the operating system's native double-click sequence. The server releases any tracked held inputs when a session disconnects.
 
 ## Limits
 

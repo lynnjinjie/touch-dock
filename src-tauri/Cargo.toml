@@ -1,6 +1,6 @@
 [package]
 name = "touch-dock"
-version = "0.1.0"
+version = "0.2.0"
 description = "Turn a phone browser into a secure local remote for a computer."
 authors = ["TouchDock"]
 edition = "2021"
@@ -24,11 +24,13 @@ hmac = "0.12"
 local-ip-address = "0.6"
 p256 = { version = "0.13", features = ["ecdh"] }
 qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
 subtle = "2.6"
 tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
 thiserror = "2"
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "sync", "time"] }
 zeroize = { version = "1.8", features = ["derive"] }

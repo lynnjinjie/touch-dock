@@ -5,15 +5,41 @@ This file follows the versioned format used by GitHub Releases and Conventional 
 
 ## Unreleased
 
-### Changed
+## [v0.2.0](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.0) - 2026-07-13
 
-- migrate the Tauri desktop frontend from imperative JavaScript to React 19 and strict TypeScript while preserving the existing Quiet Native interface
-- align the Vite configuration, React entry point, and TypeScript project structure with the official Tauri 2 React template
+### Features
+
+- migrate the Tauri desktop frontend to React 19 and strict TypeScript while preserving the Quiet Native interface
+- add persistent controller layouts for trackpad behavior, fixed-key visibility, action ordering, custom single keys, and multi-modifier shortcuts
+- add a safe window-level shortcut recorder with immediate key feedback
+- add English and Simplified Chinese interfaces with light, dark, and system themes
+- add a macOS menu-bar and Windows system-tray menu for opening TouchDock and Settings
+- add system mute support on macOS and Windows
+- add startup release checks with a 24-hour interval, manual checks, a Settings badge, and scoped system-browser links
+- replace the application and tray artwork with the Dock Bridge icon set
+
+### Bug Fixes
+
+- keep custom action name fields focused while typing and stop shortcut recording when returning to text input
+- keep mobile labels synchronized with the desktop language and configured control layout
+- keep shortcut symbols inside their icon containers and restore compact two-column action tiles
+- apply configured scroll sensitivity without resizing the mobile scroll region
+
+### Security
+
+- validate persisted layouts and custom commands in Rust before serving them to the phone
+- restrict update redirects and opener permissions to HTTPS TouchDock GitHub Release URLs
+- release held modifiers, keys, and mouse buttons when the encrypted session ends
 
 ### Build
 
 - run frontend, mobile controller, and Rust tests on macOS and Windows for every push and pull request
-- build Apple Silicon macOS, Intel macOS, and Windows installers and publish them to GitHub Releases for version tags
+- build Apple Silicon macOS, Intel macOS, and Windows installers for version tags
+- generate grouped GitHub Release notes from Conventional Commit history with commit and full-changelog links
+
+### Documentation
+
+- update product, design, protocol, development, release, and agent guidance for the current application
 
 ## [v0.1.0](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.1.0) - 2026-07-11
 
