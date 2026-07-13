@@ -5,6 +5,12 @@ This file follows the versioned format used by GitHub Releases and Conventional 
 
 ## Unreleased
 
+## [v0.2.2](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.2) - 2026-07-13
+
+### Bug Fixes
+
+- apply a complete ad-hoc signature to the Apple Silicon app bundle so Gatekeeper no longer reports the downloaded application as damaged
+
 ## [v0.2.1](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.1) - 2026-07-13
 
 ### Build
