@@ -5,8 +5,8 @@ import {
   HoldState,
   TapDetector,
   clampPointerSpeed,
-  clampScrollWidth,
   scalePointerDelta,
+  scaleScrollDelta,
 } from "./input-behavior.js";
 
 test("pointer speed is bounded and scales movement", () => {
@@ -40,9 +40,8 @@ test("tap detector marks a nearby second tap as a double click", () => {
   assert.equal(detector.register({ x: 101, y: 101, time: 1_800 }), 1);
 });
 
-test("scroll width stays usable without consuming the pointer area", () => {
-  assert.equal(clampScrollWidth(390, 20), 38);
-  assert.equal(clampScrollWidth(390, 120), 120);
-  assert.equal(clampScrollWidth(390, 300), 175.5);
-  assert.equal(clampScrollWidth(240, 180), 108);
+test("scroll speed is bounded and scales the travelled distance", () => {
+  assert.equal(scaleScrollDelta(10, 0.1), 5);
+  assert.equal(scaleScrollDelta(10, 1.5), 15);
+  assert.equal(scaleScrollDelta(10, 4), 30);
 });

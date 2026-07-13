@@ -7,7 +7,7 @@ import {
   hexToBytes,
   randomNonce,
 } from "./crypto.js";
-import { HoldState, TapDetector, clampPointerSpeed, clampScrollWidth, scalePointerDelta } from "./input-behavior.js";
+import { HoldState, TapDetector, clampPointerSpeed, scalePointerDelta, scaleScrollDelta } from "./input-behavior.js";
 
 const shell = document.querySelector("#remoteShell");
 const connectionText = document.querySelector("#connectionText");
@@ -17,10 +17,7 @@ const noticeBody = document.querySelector("#noticeBody");
 const retryButton = document.querySelector("#retryButton");
 const trackpad = document.querySelector("#trackpad");
 const scrollZone = document.querySelector("#scrollZone");
-const scrollResizer = document.querySelector("#scrollResizer");
 const textInput = document.querySelector("#textInput");
-const pointerSpeedInput = document.querySelector("#pointerSpeed");
-const pointerSpeedValue = document.querySelector("#pointerSpeedValue");
 
 let socket;
 let channel;
@@ -30,17 +27,18 @@ let requestId = 1;
 let keepAlive;
 let intentionalClose = false;
 let pointerSpeed = 1;
-let scrollZoneWidth = 38;
+let scrollSpeed = 1.3;
+let currentLanguage = "en";
 
 function setState(state, label) {
   shell.dataset.state = state;
   connectionText.textContent = label;
 }
 
-function showFailure(title, body, retryable = false) {
-  setState("failed", "Disconnected");
-  noticeTitle.textContent = title;
-  noticeBody.textContent = body;
+function showFailure(titleKey, bodyKey, retryable = false) {
+  setState("failed", copy[currentLanguage].disconnected);
+  noticeTitle.textContent = copy[currentLanguage][titleKey];
+  noticeBody.textContent = copy[currentLanguage][bodyKey];
   retryButton.hidden = !retryable;
   notice.hidden = false;
 }
@@ -106,27 +104,100 @@ function clamp(value, limit) {
 
 function setPointerSpeed(value) {
   pointerSpeed = clampPointerSpeed(value);
-  pointerSpeedInput.value = String(pointerSpeed);
-  pointerSpeedValue.value = `${pointerSpeed.toFixed(1)}×`;
-  try {
-    localStorage.setItem("touchdock.pointerSpeed", String(pointerSpeed));
-  } catch {
-    // Private browsing can disable persistent storage; the current setting still works.
-  }
 }
 
-function setScrollZoneWidth(value) {
-  const trackpadWidth = trackpad.getBoundingClientRect().width;
-  scrollZoneWidth = clampScrollWidth(trackpadWidth, value);
-  const maximumWidth = Math.max(38, trackpadWidth * 0.45);
-  trackpad.style.setProperty("--scroll-zone-width", `${scrollZoneWidth}px`);
-  scrollResizer.setAttribute("aria-valuenow", String(Math.round(scrollZoneWidth)));
-  scrollResizer.setAttribute("aria-valuemax", String(Math.round(maximumWidth)));
-  try {
-    localStorage.setItem("touchdock.scrollWidth", String(scrollZoneWidth));
-  } catch {
-    // Private browsing can disable persistent storage; the current setting still works.
-  }
+const copy = {
+  en: {
+    subtitle: "Remote control", connecting: "Connecting", connected: "Encrypted", disconnected: "Disconnected", reconnect: "Reconnect",
+    trackpad: "Trackpad", keys: "Keys", actions: "Actions", move: "Move pointer", left: "Left click", right: "Right click",
+    placeholder: "Type on your computer", sendText: "Send text", encrypted: "Commands encrypted on this device",
+    invalidResponse: "Invalid response", invalidResponseBody: "The computer sent an unreadable response.", remoteBusy: "Remote already in use", remoteBusyBody: "Disconnect the other phone, then scan the new QR code.", pairingExpired: "Pairing expired", scanCurrentQr: "Scan the current QR code on your computer.", computerNotVerified: "Computer not verified", scanFromTouchDock: "Scan the current QR code directly from TouchDock.", permissionRequired: "Permission required", permissionBody: "Allow Accessibility or Input control on your computer, then scan again.", secureSessionEnded: "Secure session ended", secureSessionBody: "Scan the refreshed QR code to reconnect.", pairingMissing: "Pairing code missing", pairingMissingBody: "Scan the QR code shown by TouchDock on your computer.", computerUnavailable: "Computer unavailable", computerUnavailableBody: "Keep TouchDock open and confirm both devices use the same Wi-Fi.", connectionPaused: "Connection paused", connectionPausedBody: "Tap Reconnect to resume control.",
+  },
+  "zh-CN": {
+    subtitle: "远程控制", connecting: "正在连接", connected: "已加密", disconnected: "已断开", reconnect: "重新连接",
+    trackpad: "触控板", keys: "按键", actions: "快捷操作", move: "移动光标", left: "左键", right: "右键",
+    placeholder: "在电脑上输入文字", sendText: "发送文字", encrypted: "命令已在此设备加密",
+    invalidResponse: "响应无效", invalidResponseBody: "电脑返回了无法读取的响应。", remoteBusy: "遥控器正在使用", remoteBusyBody: "请先断开另一台手机，再扫描新的二维码。", pairingExpired: "配对已过期", scanCurrentQr: "请扫描电脑上当前显示的二维码。", computerNotVerified: "无法验证电脑", scanFromTouchDock: "请直接扫描 TouchDock 中当前显示的二维码。", permissionRequired: "需要输入权限", permissionBody: "请在电脑上允许辅助功能或输入控制权限，然后重新连接。", secureSessionEnded: "安全会话已结束", secureSessionBody: "请扫描刷新后的二维码重新连接。", pairingMissing: "缺少配对码", pairingMissingBody: "请扫描电脑 TouchDock 中显示的二维码。", computerUnavailable: "无法连接电脑", computerUnavailableBody: "请保持 TouchDock 开启，并确认两台设备连接到同一 Wi-Fi。", connectionPaused: "连接已暂停", connectionPausedBody: "轻点“重新连接”继续控制。",
+  },
+};
+const keyPresentation = {
+  en: { escape: ["×", "Esc"], tab: ["⇥", "Tab"], space: ["␣", "Space"], backspace: ["⌫", "Delete"], enter: ["↵", "Enter"] },
+  "zh-CN": { escape: ["×", "Esc"], tab: ["⇥", "Tab"], space: ["␣", "空格"], backspace: ["⌫", "删除"], enter: ["↵", "回车"] },
+};
+const actionKeyLabel = { tab: "Tab", space: "Space", enter: "Enter", escape: "Esc", backspace: "Delete", delete: "Delete", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
+const actionKeySymbol = { tab: "⇥", space: "␣", enter: "↵", escape: "×", backspace: "⌫", delete: "⌦", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
+const modifierLabel = { meta: "⌘", control: "⌃", alt: "⌥", shift: "⇧" };
+const systemPresentation = { volume_up: ["◕", "System audio"], volume_down: ["◔", "System audio"], mute: ["⊘", "System audio"], play_pause: ["▶", "Media control"], lock_screen: ["⌾", "Confirmation required"] };
+
+function actionPresentation(commandValue) {
+  if (commandValue.kind === "system") return systemPresentation[commandValue.action] ?? ["•", "System action"];
+  const modifiers = commandValue.kind === "shortcut" ? commandValue.modifiers : [];
+  const keyLabel = actionKeyLabel[commandValue.key] ?? commandValue.key.toUpperCase();
+  const symbol = `${modifiers.map((value) => modifierLabel[value] ?? "").join("")}${actionKeySymbol[commandValue.key] ?? keyLabel}`;
+  const detail = [...modifiers.map((value) => modifierLabel[value]), keyLabel].join(" + ");
+  return [symbol, detail];
+}
+
+function applyLayout(layout) {
+  const language = layout.language === "zh-CN" ? "zh-CN" : "en";
+  currentLanguage = language;
+  const text = copy[language];
+  const builtInLabels = language === "zh-CN" ? { "switch-apps": "切换应用", search: "搜索", overview: "调度中心", desktop: "显示桌面", "show-desktop": "显示桌面", mute: "静音", "volume-up": "增大音量", "volume-down": "减小音量", "play-pause": "播放 / 暂停", "lock-screen": "锁定屏幕" } : {};
+  const builtInLabelByEnglish = language === "zh-CN" ? { "Switch apps": "切换应用", Search: "搜索", Overview: "调度中心", "Show desktop": "显示桌面", "Mute audio": "静音", "Volume up": "增大音量", "Volume down": "减小音量", "Play / Pause": "播放 / 暂停", "Lock screen": "锁定屏幕" } : {};
+  const builtInDetails = language === "zh-CN" ? { "System audio": "系统音频", "Media control": "媒体控制", "Confirmation required": "需要确认" } : {};
+  document.documentElement.lang = language;
+  document.title = language === "zh-CN" ? "TouchDock 遥控器" : "TouchDock Remote";
+  document.querySelector("#remoteSubtitle").textContent = text.subtitle;
+  document.querySelector("#trackpadTab").textContent = text.trackpad;
+  document.querySelector("#keysTab").textContent = text.keys;
+  document.querySelector("#shortcutsTab").textContent = text.actions;
+  document.querySelector(".trackpad-center span").textContent = text.move;
+  document.querySelector('[data-click="left"]').lastChild.textContent = text.left;
+  document.querySelector('[data-click="right"]').lastChild.textContent = text.right;
+  textInput.placeholder = text.placeholder;
+  textInput.setAttribute("aria-label", text.placeholder);
+  const sendTextButton = document.querySelector("#sendTextButton");
+  sendTextButton.setAttribute("aria-label", text.sendText);
+  sendTextButton.title = text.sendText;
+  retryButton.textContent = text.reconnect;
+  document.querySelector(".tabs").setAttribute("aria-label", language === "zh-CN" ? "遥控器控制区" : "Remote controls");
+  trackpad.setAttribute("aria-label", language === "zh-CN" ? "触控板区域" : "Trackpad area");
+  scrollZone.setAttribute("aria-label", language === "zh-CN" ? "垂直滚动区域" : "Vertical scroll area");
+  document.querySelector(".direction-pad").setAttribute("aria-label", language === "zh-CN" ? "方向键" : "Arrow keys");
+  document.querySelector("#modifierRow").setAttribute("aria-label", language === "zh-CN" ? "修饰键" : "Modifier keys");
+  document.querySelector(".secure-state").lastChild.textContent = ` ${text.encrypted}`;
+  setPointerSpeed(layout.trackpad.pointerSpeed);
+  scrollSpeed = clampPointerSpeed(layout.trackpad.scrollSpeed);
+  document.querySelector('[data-click="left"]').hidden = !layout.trackpad.showLeftClick;
+  document.querySelector('[data-click="right"]').hidden = !layout.trackpad.showRightClick;
+  document.querySelector("#modifierRow").hidden = !layout.trackpad.showModifiers;
+  const utilityKeys = document.querySelector("#utilityKeys");
+  utilityKeys.replaceChildren(...layout.keys.filter((item) => item.visible).map((item) => {
+    const [symbol, label] = keyPresentation[language][item.id];
+    const button = document.createElement("button");
+    button.className = "utility-key"; button.type = "button"; button.dataset.key = item.id;
+    button.innerHTML = `<span aria-hidden="true">${symbol}</span><small>${label}</small>`;
+    return button;
+  }));
+  const actions = document.querySelector("#shortcutsPanel");
+  actions.replaceChildren(...layout.actions.filter((item) => item.visible).map((item) => {
+    const [symbol, detail] = actionPresentation(item.command);
+    const button = document.createElement("button");
+    button.className = "shortcut"; button.type = "button"; button._command = item.command;
+    const icon = document.createElement("span"); icon.className = "shortcut-icon"; icon.ariaHidden = "true"; icon.textContent = symbol;
+    const labels = document.createElement("span"); const title = document.createElement("strong"); const small = document.createElement("small");
+    title.textContent = builtInLabels[item.id] ?? builtInLabelByEnglish[item.label] ?? item.label;
+    small.textContent = builtInDetails[detail] ?? detail;
+    labels.append(title, small); button.append(icon, labels);
+    return button;
+  }));
+}
+
+try {
+  const response = await fetch("/remote/config.json", { cache: "no-store" });
+  if (response.ok) applyLayout(await response.json());
+} catch {
+  // The built-in defaults remain usable if configuration cannot be loaded.
 }
 
 function handleServerMessage(event, handshake) {
@@ -134,7 +205,7 @@ function handleServerMessage(event, handshake) {
   try {
     message = JSON.parse(event.data);
   } catch {
-    showFailure("Invalid response", "The computer sent an unreadable response.");
+    showFailure("invalidResponse", "invalidResponseBody");
     socket.close();
     return;
   }
@@ -144,8 +215,8 @@ function handleServerMessage(event, handshake) {
       const busy = message.code === "session_busy";
       if (handshake.isResume && !busy) clearResumeToken();
       showFailure(
-        busy ? "Remote already in use" : "Pairing expired",
-        busy ? "Disconnect the other phone, then scan the new QR code." : "Scan the current QR code on your computer.",
+        busy ? "remoteBusy" : "pairingExpired",
+        busy ? "remoteBusyBody" : "scanCurrentQr",
       );
       socket.close();
       return;
@@ -156,13 +227,13 @@ function handleServerMessage(event, handshake) {
       handshake.nonce.fill(0);
       handshake.token.fill(0);
       token = null;
-      setState("connected", "Encrypted");
+      setState("connected", copy[currentLanguage].connected);
       hideFailure();
       keepAlive = window.setInterval(() => {
         sendEncrypted({ type: "ping", nonce: Date.now() });
       }, 15_000);
     } catch {
-      showFailure("Computer not verified", "Scan the current QR code directly from TouchDock.");
+      showFailure("computerNotVerified", "scanFromTouchDock");
       socket.close();
     }
     return;
@@ -178,13 +249,13 @@ function handleServerMessage(event, handshake) {
       }
     } else if (decrypted.type === "error") {
       if (decrypted.code === "permission_required") {
-        showFailure("Permission required", "Allow Accessibility or Input control on your computer, then scan again.");
+        showFailure("permissionRequired", "permissionBody");
       } else if (!decrypted.retryable) {
         navigator.vibrate?.(30);
       }
     }
   } catch {
-    showFailure("Secure session ended", "Scan the refreshed QR code to reconnect.");
+    showFailure("secureSessionEnded", "secureSessionBody");
     socket.close();
   }
 }
@@ -193,13 +264,13 @@ function connect() {
   const isResume = !token && Boolean(resumeToken);
   const credential = token ?? resumeToken;
   if (!credential) {
-    showFailure("Pairing code missing", "Scan the QR code shown by TouchDock on your computer.");
+    showFailure("pairingMissing", "pairingMissingBody");
     return;
   }
   intentionalClose = false;
   channel = null;
   hideFailure();
-  setState("connecting", "Connecting");
+  setState("connecting", copy[currentLanguage].connecting);
   const clientPrivateKey = createEphemeralPrivateKey();
   const nonce = randomNonce();
   const handshakeToken = credential.slice();
@@ -211,12 +282,12 @@ function connect() {
   socket.addEventListener("open", () => socket.send(JSON.stringify(hello.message)), { once: true });
   socket.addEventListener("message", (event) => handleServerMessage(event, handshake));
   socket.addEventListener("error", () => {
-    if (!channel) showFailure("Computer unavailable", "Keep TouchDock open and confirm both devices use the same Wi-Fi.", Boolean(token || resumeToken));
+    if (!channel) showFailure("computerUnavailable", "computerUnavailableBody", Boolean(token || resumeToken));
   });
   socket.addEventListener("close", () => {
     window.clearInterval(keepAlive);
     if (channel && !intentionalClose) {
-      showFailure("Connection paused", "Tap Reconnect to resume control.", Boolean(resumeToken));
+      showFailure("connectionPaused", "connectionPausedBody", Boolean(resumeToken));
     }
     channel?.destroy();
     channel = null;
@@ -314,50 +385,14 @@ scrollZone.addEventListener("pointermove", (event) => {
   if (!scrollPointer || event.pointerId !== scrollPointer.id) return;
   const dy = event.clientY - scrollPointer.y;
   scrollPointer.y = event.clientY;
-  if (Math.abs(dy) >= 1) command({ kind: "scroll", dx: 0, dy: clamp(-dy * 2, 1_000) });
+  if (Math.abs(dy) >= 1) command({ kind: "scroll", dx: 0, dy: clamp(scaleScrollDelta(-dy * 2, scrollSpeed), 1_000) });
 });
 scrollZone.addEventListener("pointerup", () => { scrollPointer = undefined; });
 scrollZone.addEventListener("pointercancel", () => { scrollPointer = undefined; });
 
-let resizePointer;
-function finishResize(event) {
-  if (event && resizePointer && event.pointerId !== resizePointer.id) return;
-  resizePointer = undefined;
-  scrollResizer.classList.remove("active");
-}
-
-scrollResizer.addEventListener("pointerdown", (event) => {
-  if (event.button !== 0) return;
-  event.preventDefault();
-  event.stopPropagation();
-  const trackpadBounds = trackpad.getBoundingClientRect();
-  scrollResizer.setPointerCapture(event.pointerId);
-  resizePointer = { id: event.pointerId, right: trackpadBounds.right };
-  scrollResizer.classList.add("active");
-});
-scrollResizer.addEventListener("pointermove", (event) => {
-  if (!resizePointer || event.pointerId !== resizePointer.id) return;
-  event.preventDefault();
-  event.stopPropagation();
-  setScrollZoneWidth(resizePointer.right - event.clientX);
-});
-scrollResizer.addEventListener("pointerup", finishResize);
-scrollResizer.addEventListener("pointercancel", finishResize);
-scrollResizer.addEventListener("lostpointercapture", finishResize);
-scrollResizer.addEventListener("keydown", (event) => {
-  let nextWidth = scrollZoneWidth;
-  if (event.key === "ArrowLeft") nextWidth += 8;
-  else if (event.key === "ArrowRight") nextWidth -= 8;
-  else if (event.key === "Home") nextWidth = 38;
-  else if (event.key === "End") nextWidth = trackpad.getBoundingClientRect().width * 0.45;
-  else return;
-  event.preventDefault();
-  setScrollZoneWidth(nextWidth);
-});
-
 trackpad.addEventListener("wheel", (event) => {
   event.preventDefault();
-  command({ kind: "scroll", dx: clamp(-event.deltaX, 1_000), dy: clamp(-event.deltaY, 1_000) });
+  command({ kind: "scroll", dx: clamp(scaleScrollDelta(-event.deltaX, scrollSpeed), 1_000), dy: clamp(scaleScrollDelta(-event.deltaY, scrollSpeed), 1_000) });
 }, { passive: false });
 
 const activeReleases = new Set();
@@ -411,13 +446,20 @@ for (const button of document.querySelectorAll("[data-key]:not(.shortcut)")) {
   );
 }
 
+for (const button of document.querySelectorAll("[data-modifier]")) {
+  bindHeldButton(
+    button,
+    () => command({ kind: "modifier", modifier: button.dataset.modifier, state: "down" }),
+    () => command({ kind: "modifier", modifier: button.dataset.modifier, state: "up" }),
+  );
+}
+
 for (const button of document.querySelectorAll(".shortcut")) {
   button.addEventListener("click", () => {
-    if (button.dataset.modifiers) {
-      command({ kind: "shortcut", modifiers: button.dataset.modifiers.split(","), key: button.dataset.shortcutKey });
-    } else {
-      pressKey(button.dataset.key);
-    }
+    const value = button._command;
+    if (value.kind === "shortcut") command(value);
+    else if (value.kind === "key") pressKey(value.key);
+    else if (value.action === "mute") command({ kind: "system", action: "mute" });
   });
 }
 
@@ -437,8 +479,6 @@ textInput.addEventListener("keydown", (event) => {
 });
 
 retryButton.addEventListener("click", connect);
-pointerSpeedInput.addEventListener("input", () => setPointerSpeed(pointerSpeedInput.value));
-window.addEventListener("resize", () => setScrollZoneWidth(scrollZoneWidth));
 document.addEventListener("dblclick", (event) => event.preventDefault(), { passive: false });
 document.addEventListener("gesturestart", (event) => event.preventDefault(), { passive: false });
 window.addEventListener("blur", () => {
@@ -451,7 +491,7 @@ window.addEventListener("pagehide", () => {
 });
 window.addEventListener("pageshow", () => {
   if (resumeToken && socket?.readyState === WebSocket.CLOSED) {
-    showFailure("Connection paused", "Tap Reconnect to resume control.", true);
+    showFailure("connectionPaused", "connectionPausedBody", true);
   }
 });
 
@@ -465,15 +505,5 @@ try {
   if (token) clearResumeToken();
 } catch {
   clearResumeToken();
-}
-try {
-  setPointerSpeed(localStorage.getItem("touchdock.pointerSpeed") ?? 1);
-} catch {
-  setPointerSpeed(1);
-}
-try {
-  setScrollZoneWidth(localStorage.getItem("touchdock.scrollWidth") ?? 38);
-} catch {
-  setScrollZoneWidth(38);
 }
 connect();

@@ -1,4 +1,6 @@
-use crate::input::{DriverStatus, InputDriver, InputError, Key, KeyState, Modifier, MouseButton};
+use crate::input::{
+    DriverStatus, InputDriver, InputError, Key, KeyState, Modifier, MouseButton, SystemAction,
+};
 use core_graphics::{
     display::CGDisplay,
     event::{
@@ -21,6 +23,37 @@ extern "C" {
     fn AXIsProcessTrusted() -> bool;
     fn AXIsProcessTrustedWithOptions(options: *const c_void) -> bool;
     static kAXTrustedCheckOptionPrompt: *const c_void;
+}
+
+#[repr(C)]
+struct AudioObjectPropertyAddress {
+    selector: u32,
+    scope: u32,
+    element: u32,
+}
+
+#[link(name = "CoreAudio", kind = "framework")]
+extern "C" {
+    fn AudioObjectGetPropertyData(
+        object: u32,
+        address: *const AudioObjectPropertyAddress,
+        qualifier_size: u32,
+        qualifier_data: *const c_void,
+        data_size: *mut u32,
+        data: *mut c_void,
+    ) -> i32;
+    fn AudioObjectSetPropertyData(
+        object: u32,
+        address: *const AudioObjectPropertyAddress,
+        qualifier_size: u32,
+        qualifier_data: *const c_void,
+        data_size: u32,
+        data: *const c_void,
+    ) -> i32;
+}
+
+const fn fourcc(value: &[u8; 4]) -> u32 {
+    u32::from_be_bytes(*value)
 }
 
 #[link(name = "CoreFoundation", kind = "framework")]
@@ -68,6 +101,64 @@ pub struct MacOsInputDriver {
 }
 
 impl MacOsInputDriver {
+    fn toggle_mute() -> Result<(), InputError> {
+        let default_output = AudioObjectPropertyAddress {
+            selector: fourcc(b"dOut"),
+            scope: fourcc(b"glob"),
+            element: 0,
+        };
+        let mut device = 0_u32;
+        let mut device_size = std::mem::size_of::<u32>() as u32;
+        let status = unsafe {
+            AudioObjectGetPropertyData(
+                1,
+                &default_output,
+                0,
+                ptr::null(),
+                &mut device_size,
+                (&mut device as *mut u32).cast(),
+            )
+        };
+        if status != 0 || device == 0 {
+            return Err(InputError::Rejected);
+        }
+        let mute_property = AudioObjectPropertyAddress {
+            selector: fourcc(b"mute"),
+            scope: fourcc(b"outp"),
+            element: 0,
+        };
+        let mut muted = 0_u32;
+        let mut muted_size = std::mem::size_of::<u32>() as u32;
+        let status = unsafe {
+            AudioObjectGetPropertyData(
+                device,
+                &mute_property,
+                0,
+                ptr::null(),
+                &mut muted_size,
+                (&mut muted as *mut u32).cast(),
+            )
+        };
+        if status != 0 {
+            return Err(InputError::Rejected);
+        }
+        let next = u32::from(muted == 0);
+        let status = unsafe {
+            AudioObjectSetPropertyData(
+                device,
+                &mute_property,
+                0,
+                ptr::null(),
+                std::mem::size_of::<u32>() as u32,
+                (&next as *const u32).cast(),
+            )
+        };
+        if status == 0 {
+            Ok(())
+        } else {
+            Err(InputError::Rejected)
+        }
+    }
     fn is_trusted() -> bool {
         unsafe { AXIsProcessTrusted() }
     }
@@ -269,6 +360,17 @@ impl InputDriver for MacOsInputDriver {
         Self::post_key(key, state)
     }
 
+    fn modifier(&self, modifier: Modifier, state: KeyState) -> Result<(), InputError> {
+        Self::ensure_trusted()?;
+        Self::post_modifier(modifier, state)
+    }
+
+    fn system_action(&self, action: SystemAction) -> Result<(), InputError> {
+        match action {
+            SystemAction::Mute => Self::toggle_mute(),
+        }
+    }
+
     fn shortcut(&self, modifiers: &[Modifier], key: Key) -> Result<(), InputError> {
         Self::ensure_trusted()?;
         for modifier in modifiers {
@@ -311,7 +413,32 @@ fn key_code(key: Key) -> CGKeyCode {
         Key::PageUp => KeyCode::PAGE_UP,
         Key::PageDown => KeyCode::PAGE_DOWN,
         Key::F11 => KeyCode::F11,
+        Key::A => KeyCode::ANSI_A,
+        Key::B => KeyCode::ANSI_B,
+        Key::C => KeyCode::ANSI_C,
+        Key::D => KeyCode::ANSI_D,
+        Key::E => KeyCode::ANSI_E,
+        Key::F => KeyCode::ANSI_F,
+        Key::G => KeyCode::ANSI_G,
+        Key::H => KeyCode::ANSI_H,
+        Key::I => KeyCode::ANSI_I,
+        Key::J => KeyCode::ANSI_J,
+        Key::K => KeyCode::ANSI_K,
+        Key::L => KeyCode::ANSI_L,
+        Key::M => KeyCode::ANSI_M,
+        Key::N => KeyCode::ANSI_N,
+        Key::O => KeyCode::ANSI_O,
+        Key::P => KeyCode::ANSI_P,
         Key::Q => KeyCode::ANSI_Q,
+        Key::R => KeyCode::ANSI_R,
+        Key::S => KeyCode::ANSI_S,
+        Key::T => KeyCode::ANSI_T,
+        Key::U => KeyCode::ANSI_U,
+        Key::V => KeyCode::ANSI_V,
+        Key::W => KeyCode::ANSI_W,
+        Key::X => KeyCode::ANSI_X,
+        Key::Y => KeyCode::ANSI_Y,
+        Key::Z => KeyCode::ANSI_Z,
         Key::Mute => KeyCode::MUTE,
     }
 }

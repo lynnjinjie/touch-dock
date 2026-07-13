@@ -1,4 +1,6 @@
-use crate::input::{DriverStatus, InputDriver, InputError, Key, KeyState, Modifier, MouseButton};
+use crate::input::{
+    DriverStatus, InputDriver, InputError, Key, KeyState, Modifier, MouseButton, SystemAction,
+};
 
 pub struct UnsupportedInputDriver;
 
@@ -25,6 +27,12 @@ impl InputDriver for UnsupportedInputDriver {
 
     fn key(&self, _key: Key, _state: KeyState) -> Result<(), InputError> {
         Err(InputError::Unsupported("keyboard input"))
+    }
+    fn modifier(&self, _modifier: Modifier, _state: KeyState) -> Result<(), InputError> {
+        Err(InputError::Unsupported("modifier input"))
+    }
+    fn system_action(&self, _action: SystemAction) -> Result<(), InputError> {
+        Err(InputError::Unsupported("system action"))
     }
 
     fn shortcut(&self, _modifiers: &[Modifier], _key: Key) -> Result<(), InputError> {

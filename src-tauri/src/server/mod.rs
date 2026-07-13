@@ -2,11 +2,14 @@ mod pairing;
 mod rate_limit;
 
 use crate::{
+    control_layout::{ControlLayout, ControlLayoutStore},
     crypto::{
         build_pairing_url, create_server_proof, decode_base64, derive_keys, encode_base64,
         render_pairing_qr, CryptoError, EncryptedEnvelope, SecureChannel,
     },
-    input::{DriverStatus, InputCommand, InputDriver, InputError, Key, KeyState, MouseButton},
+    input::{
+        DriverStatus, InputCommand, InputDriver, InputError, Key, KeyState, Modifier, MouseButton,
+    },
     protocol::{ClientMessage, ErrorCode, ServerMessage, PROTOCOL_VERSION},
 };
 use axum::{
@@ -49,6 +52,7 @@ const MOBILE_APP_JS: &str = include_str!("../../../mobile/app.js");
 #[derive(Default)]
 struct HeldInputs {
     keys: HashSet<Key>,
+    modifiers: HashSet<Modifier>,
     mouse_buttons: HashSet<MouseButton>,
 }
 
@@ -71,6 +75,14 @@ impl HeldInputs {
                     self.mouse_buttons.remove(button);
                 }
             },
+            InputCommand::Modifier { modifier, state } => match state {
+                KeyState::Down => {
+                    self.modifiers.insert(*modifier);
+                }
+                KeyState::Up => {
+                    self.modifiers.remove(modifier);
+                }
+            },
             _ => {}
         }
     }
@@ -78,6 +90,9 @@ impl HeldInputs {
     fn release_all(&mut self, driver: &dyn InputDriver) {
         for key in self.keys.drain() {
             let _ = driver.key(key, KeyState::Up);
+        }
+        for modifier in self.modifiers.drain() {
+            let _ = driver.modifier(modifier, KeyState::Up);
         }
         for button in self.mouse_buttons.drain() {
             let _ = driver.mouse_button(button, KeyState::Up);
@@ -89,6 +104,7 @@ impl HeldInputs {
 struct ServiceState {
     driver: Arc<dyn InputDriver>,
     pairing: Arc<PairingManager>,
+    control_layout: Arc<ControlLayoutStore>,
 }
 
 pub struct RemoteServer {
@@ -125,7 +141,10 @@ struct HealthResponse {
 }
 
 impl RemoteServer {
-    pub async fn start(driver: Arc<dyn InputDriver>) -> Result<Self, ServerError> {
+    pub async fn start(
+        driver: Arc<dyn InputDriver>,
+        config_path: std::path::PathBuf,
+    ) -> Result<Self, ServerError> {
         let (ip, lan_available) = service_ip();
         Self::start_with_bind(
             driver,
@@ -133,6 +152,7 @@ impl RemoteServer {
             ip,
             DEFAULT_PORT,
             lan_available,
+            Some(config_path),
         )
         .await
     }
@@ -144,7 +164,7 @@ impl RemoteServer {
         port: u16,
         lan_available: bool,
     ) -> Result<Self, ServerError> {
-        Self::start_with_bind(driver, ip, ip, port, lan_available).await
+        Self::start_with_bind(driver, ip, ip, port, lan_available, None).await
     }
 
     async fn start_with_bind(
@@ -153,6 +173,7 @@ impl RemoteServer {
         advertised_ip: IpAddr,
         port: u16,
         lan_available: bool,
+        config_path: Option<std::path::PathBuf>,
     ) -> Result<Self, ServerError> {
         let listener = match TcpListener::bind(SocketAddr::new(bind_ip, port)).await {
             Ok(listener) => listener,
@@ -166,12 +187,14 @@ impl RemoteServer {
         let state = Arc::new(ServiceState {
             driver,
             pairing: PairingManager::new(PAIRING_TTL)?,
+            control_layout: Arc::new(ControlLayoutStore::load(config_path)),
         });
         let app = Router::new()
             .route("/health", get(health))
             .route("/remote", get(remote_html))
             .route("/remote/style.css", get(remote_css))
             .route("/remote/app.js", get(remote_app_js))
+            .route("/remote/config.json", get(remote_config))
             .route("/ws", any(websocket))
             .with_state(Arc::clone(&state));
         let (shutdown_tx, shutdown_rx) = oneshot::channel();
@@ -224,6 +247,15 @@ impl RemoteServer {
     pub fn request_input_permission(&self) -> DriverStatus {
         self.state.driver.request_permission()
     }
+
+    pub fn control_layout(&self) -> ControlLayout {
+        self.state.control_layout.get()
+    }
+
+    pub fn set_control_layout(&self, layout: ControlLayout) -> Result<ControlLayout, ServerError> {
+        self.state.control_layout.set(layout)?;
+        Ok(self.state.control_layout.get())
+    }
 }
 
 impl Drop for RemoteServer {
@@ -270,6 +302,10 @@ async fn remote_css() -> Response {
 
 async fn remote_app_js() -> Response {
     static_response(MOBILE_APP_JS, "text/javascript; charset=utf-8")
+}
+
+async fn remote_config(State(state): State<Arc<ServiceState>>) -> Json<ControlLayout> {
+    Json(state.control_layout.get())
 }
 
 fn static_response(body: &'static str, content_type: &'static str) -> Response {
@@ -693,6 +729,8 @@ pub enum ServerError {
     Pairing(#[from] PairingError),
     #[error("failed to prepare pairing data: {0}")]
     Crypto(#[from] CryptoError),
+    #[error("invalid control layout: {0}")]
+    Layout(#[from] crate::control_layout::LayoutError),
 }
 
 #[cfg(test)]
@@ -702,7 +740,7 @@ mod tests {
         crypto::{
             create_client_proof, derive_keys, verify_server_proof, EncryptedEnvelope, SecureChannel,
         },
-        input::Modifier,
+        input::{Modifier, SystemAction},
     };
     use futures_util::{SinkExt, StreamExt};
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -734,6 +772,7 @@ mod tests {
             state: Arc::new(ServiceState {
                 driver,
                 pairing: PairingManager::new(Duration::from_secs(60)).unwrap(),
+                control_layout: Arc::new(ControlLayoutStore::load(None)),
             }),
             address: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 4816),
             lan_available: false,
@@ -789,6 +828,17 @@ mod tests {
             if state == KeyState::Up {
                 self.releases.fetch_add(1, Ordering::SeqCst);
             }
+            Ok(())
+        }
+
+        fn modifier(&self, _modifier: Modifier, state: KeyState) -> Result<(), InputError> {
+            if state == KeyState::Up {
+                self.releases.fetch_add(1, Ordering::SeqCst);
+            }
+            Ok(())
+        }
+
+        fn system_action(&self, _action: SystemAction) -> Result<(), InputError> {
             Ok(())
         }
 

@@ -118,4 +118,25 @@ mod tests {
         );
         assert!(result.is_err());
     }
+
+    #[test]
+    fn parses_only_a_named_system_action() {
+        let message: ClientMessage = serde_json::from_str(
+            r#"{"type":"command","request_id":9,"command":{"kind":"system","action":"mute"}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            message,
+            ClientMessage::Command {
+                request_id: 9,
+                command: InputCommand::System {
+                    action: crate::input::SystemAction::Mute,
+                },
+            }
+        );
+        assert!(serde_json::from_str::<ClientMessage>(
+            r#"{"type":"command","request_id":10,"command":{"kind":"system","action":"shell"}}"#
+        )
+        .is_err());
+    }
 }

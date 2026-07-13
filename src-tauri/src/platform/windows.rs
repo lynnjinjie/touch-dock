@@ -1,4 +1,6 @@
-use crate::input::{DriverStatus, InputDriver, InputError, Key, KeyState, Modifier, MouseButton};
+use crate::input::{
+    DriverStatus, InputDriver, InputError, Key, KeyState, Modifier, MouseButton, SystemAction,
+};
 use std::mem::size_of;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, INPUT_MOUSE, KEYBDINPUT, KEYBD_EVENT_FLAGS,
@@ -144,6 +146,19 @@ impl InputDriver for WindowsInputDriver {
         Self::send(&[Self::keyboard(key, state)])
     }
 
+    fn modifier(&self, modifier: Modifier, state: KeyState) -> Result<(), InputError> {
+        Self::send(&[Self::modifier(modifier, state)?])
+    }
+
+    fn system_action(&self, action: SystemAction) -> Result<(), InputError> {
+        match action {
+            SystemAction::Mute => Self::send(&[
+                Self::keyboard(Key::Mute, KeyState::Down),
+                Self::keyboard(Key::Mute, KeyState::Up),
+            ]),
+        }
+    }
+
     fn shortcut(&self, modifiers: &[Modifier], key: Key) -> Result<(), InputError> {
         let mut inputs = Vec::with_capacity(modifiers.len() * 2 + 2);
         for modifier in modifiers {
@@ -196,7 +211,32 @@ fn virtual_key(key: Key) -> (VIRTUAL_KEY, bool) {
         Key::PageUp => (VK_PRIOR, true),
         Key::PageDown => (VK_NEXT, true),
         Key::F11 => (VIRTUAL_KEY(0x7A), false),
+        Key::A => (VIRTUAL_KEY(b'A' as u16), false),
+        Key::B => (VIRTUAL_KEY(b'B' as u16), false),
+        Key::C => (VIRTUAL_KEY(b'C' as u16), false),
+        Key::D => (VIRTUAL_KEY(b'D' as u16), false),
+        Key::E => (VIRTUAL_KEY(b'E' as u16), false),
+        Key::F => (VIRTUAL_KEY(b'F' as u16), false),
+        Key::G => (VIRTUAL_KEY(b'G' as u16), false),
+        Key::H => (VIRTUAL_KEY(b'H' as u16), false),
+        Key::I => (VIRTUAL_KEY(b'I' as u16), false),
+        Key::J => (VIRTUAL_KEY(b'J' as u16), false),
+        Key::K => (VIRTUAL_KEY(b'K' as u16), false),
+        Key::L => (VIRTUAL_KEY(b'L' as u16), false),
+        Key::M => (VIRTUAL_KEY(b'M' as u16), false),
+        Key::N => (VIRTUAL_KEY(b'N' as u16), false),
+        Key::O => (VIRTUAL_KEY(b'O' as u16), false),
+        Key::P => (VIRTUAL_KEY(b'P' as u16), false),
         Key::Q => (VIRTUAL_KEY(b'Q' as u16), false),
+        Key::R => (VIRTUAL_KEY(b'R' as u16), false),
+        Key::S => (VIRTUAL_KEY(b'S' as u16), false),
+        Key::T => (VIRTUAL_KEY(b'T' as u16), false),
+        Key::U => (VIRTUAL_KEY(b'U' as u16), false),
+        Key::V => (VIRTUAL_KEY(b'V' as u16), false),
+        Key::W => (VIRTUAL_KEY(b'W' as u16), false),
+        Key::X => (VIRTUAL_KEY(b'X' as u16), false),
+        Key::Y => (VIRTUAL_KEY(b'Y' as u16), false),
+        Key::Z => (VIRTUAL_KEY(b'Z' as u16), false),
         Key::Mute => (VIRTUAL_KEY(0xAD), true),
     }
 }

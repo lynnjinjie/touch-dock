@@ -11,7 +11,7 @@
     <main class="remote-shell" data-state="connecting" id="remoteShell">
       <header class="app-header">
         <div class="brand-mark" aria-hidden="true">T</div>
-        <div class="brand-copy"><strong>TouchDock</strong><span>Remote control</span></div>
+        <div class="brand-copy"><strong>TouchDock</strong><span id="remoteSubtitle">Remote control</span></div>
         <div class="connection" id="connection" role="status" aria-live="polite"><i aria-hidden="true"></i><span id="connectionText">Connecting</span></div>
       </header>
 
@@ -23,25 +23,25 @@
       <nav class="tabs" role="tablist" aria-label="Remote controls">
         <button class="tab active" id="trackpadTab" type="button" role="tab" aria-selected="true" aria-controls="trackpadPanel" data-tab="trackpad">Trackpad</button>
         <button class="tab" id="keysTab" type="button" role="tab" aria-selected="false" aria-controls="keysPanel" data-tab="keys" tabindex="-1">Keys</button>
-        <button class="tab" id="shortcutsTab" type="button" role="tab" aria-selected="false" aria-controls="shortcutsPanel" data-tab="shortcuts" tabindex="-1">Shortcuts</button>
+        <button class="tab" id="shortcutsTab" type="button" role="tab" aria-selected="false" aria-controls="shortcutsPanel" data-tab="shortcuts" tabindex="-1">Actions</button>
       </nav>
 
       <section class="panel trackpad-panel active" id="trackpadPanel" role="tabpanel" aria-labelledby="trackpadTab">
         <div class="trackpad" id="trackpad" aria-label="Trackpad area">
           <div class="trackpad-center" aria-hidden="true"><i></i><span>Move pointer</span></div>
           <div class="scroll-zone" id="scrollZone" aria-label="Vertical scroll area">
-            <div class="scroll-resizer" id="scrollResizer" role="separator" aria-label="Resize scroll area" aria-orientation="vertical" aria-valuemin="38" aria-valuemax="180" aria-valuenow="38" tabindex="0"></div>
             <i aria-hidden="true"></i>
           </div>
-        </div>
-        <div class="speed-control">
-          <label for="pointerSpeed">Pointer speed</label>
-          <input id="pointerSpeed" type="range" min="0.5" max="3" step="0.1" value="1" aria-describedby="pointerSpeedValue">
-          <output id="pointerSpeedValue" for="pointerSpeed">1.0×</output>
         </div>
         <div class="click-row">
           <button class="click-button" type="button" data-click="left"><span aria-hidden="true">◉</span>Left click</button>
           <button class="click-button" type="button" data-click="right"><span aria-hidden="true">◎</span>Right click</button>
+        </div>
+        <div class="modifier-row" id="modifierRow" aria-label="Modifier keys">
+          <button type="button" data-modifier="control" aria-label="Control">⌃</button>
+          <button type="button" data-modifier="alt" aria-label="Option">⌥</button>
+          <button type="button" data-modifier="shift" aria-label="Shift">⇧</button>
+          <button type="button" data-modifier="meta" aria-label="Command">⌘</button>
         </div>
       </section>
 
@@ -56,7 +56,7 @@
           <button class="key key-down" type="button" data-key="arrow_down" aria-label="Arrow down" title="Arrow down">↓</button>
           <button class="key key-right" type="button" data-key="arrow_right" aria-label="Arrow right" title="Arrow right">→</button>
         </div>
-        <div class="utility-keys" aria-label="Keyboard keys">
+        <div class="utility-keys" id="utilityKeys" aria-label="Keyboard keys">
           <button class="utility-key" type="button" data-key="escape"><span aria-hidden="true">×</span><small>Esc</small></button>
           <button class="utility-key" type="button" data-key="tab"><span aria-hidden="true">⇥</span><small>Tab</small></button>
           <button class="utility-key" type="button" data-key="space"><span aria-hidden="true">␣</span><small>Space</small></button>
@@ -65,13 +65,7 @@
         </div>
       </section>
 
-      <section class="panel shortcuts-panel" id="shortcutsPanel" role="tabpanel" aria-labelledby="shortcutsTab" hidden>
-        <button class="shortcut" type="button" data-modifiers="meta" data-shortcut-key="tab"><span class="shortcut-icon" aria-hidden="true">⌘⇥</span><span><strong>Switch apps</strong><small>Command + Tab</small></span></button>
-        <button class="shortcut" type="button" data-modifiers="meta" data-shortcut-key="space"><span class="shortcut-icon" aria-hidden="true">⌕</span><span><strong>Search</strong><small>Command + Space</small></span></button>
-        <button class="shortcut" type="button" data-modifiers="control" data-shortcut-key="arrow_up"><span class="shortcut-icon" aria-hidden="true">⌃↑</span><span><strong>Overview</strong><small>Control + Up</small></span></button>
-        <button class="shortcut" type="button" data-modifiers="function" data-shortcut-key="f11"><span class="shortcut-icon" aria-hidden="true">▦</span><span><strong>Show desktop</strong><small>Function + F11</small></span></button>
-        <button class="shortcut" type="button" data-key="mute"><span class="shortcut-icon" aria-hidden="true">⊘</span><span><strong>Mute audio</strong><small>System audio</small></span></button>
-      </section>
+      <section class="panel shortcuts-panel" id="shortcutsPanel" role="tabpanel" aria-labelledby="shortcutsTab" hidden></section>
 
       <footer class="secure-state"><span aria-hidden="true">●</span> Commands encrypted on this device</footer>
     </main>

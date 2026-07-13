@@ -49,7 +49,38 @@ pub enum Key {
     PageUp,
     PageDown,
     F11,
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
     Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
+    Mute,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SystemAction {
     Mute,
 }
 
@@ -78,6 +109,13 @@ pub enum InputCommand {
     Key {
         key: Key,
         state: KeyState,
+    },
+    Modifier {
+        modifier: Modifier,
+        state: KeyState,
+    },
+    System {
+        action: SystemAction,
     },
     Shortcut {
         modifiers: Vec<Modifier>,
@@ -123,14 +161,19 @@ impl InputCommand {
                 }
                 Ok(())
             }
-            Self::Click { .. } | Self::MouseButton { .. } | Self::Key { .. } => Ok(()),
+            Self::Click { .. }
+            | Self::MouseButton { .. }
+            | Self::Key { .. }
+            | Self::Modifier { .. }
+            | Self::System { .. } => Ok(()),
         }
     }
 
     pub fn rate_cost(&self) -> u32 {
         match self {
             Self::Move { .. } | Self::Scroll { .. } => 1,
-            Self::Key { .. } | Self::MouseButton { .. } => 2,
+            Self::Key { .. } | Self::Modifier { .. } | Self::MouseButton { .. } => 2,
+            Self::System { .. } => 4,
             Self::Click { .. } | Self::ClickState { .. } => 4,
             Self::Shortcut { modifiers, .. } => 4 + modifiers.len() as u32 * 2,
             Self::Text { text } => text.chars().count().max(1) as u32,
@@ -139,19 +182,48 @@ impl InputCommand {
 }
 
 fn allowed_shortcut(modifiers: &HashSet<Modifier>, key: Key) -> bool {
-    let exactly = |modifier| modifiers.len() == 1 && modifiers.contains(&modifier);
-    matches!(
-        (
-            key,
-            exactly(Modifier::Meta),
-            exactly(Modifier::Control),
-            exactly(Modifier::Function)
-        ),
-        (Key::Tab, true, false, false)
-            | (Key::Space, true, false, false)
-            | (Key::ArrowUp, false, true, false)
-            | (Key::F11, false, false, true)
-    )
+    let supported_key = matches!(
+        key,
+        Key::A
+            | Key::B
+            | Key::C
+            | Key::D
+            | Key::E
+            | Key::F
+            | Key::G
+            | Key::H
+            | Key::I
+            | Key::J
+            | Key::K
+            | Key::L
+            | Key::M
+            | Key::N
+            | Key::O
+            | Key::P
+            | Key::Q
+            | Key::R
+            | Key::S
+            | Key::T
+            | Key::U
+            | Key::V
+            | Key::W
+            | Key::X
+            | Key::Y
+            | Key::Z
+            | Key::Tab
+            | Key::Space
+            | Key::Enter
+            | Key::Escape
+            | Key::Backspace
+            | Key::Delete
+            | Key::ArrowUp
+            | Key::ArrowDown
+            | Key::F11
+    );
+    let supported_modifiers = modifiers
+        .iter()
+        .all(|modifier| !matches!(modifier, Modifier::Function));
+    supported_key && supported_modifiers
 }
 
 fn validate_delta(
@@ -212,6 +284,8 @@ pub trait InputDriver: Send + Sync {
     fn mouse_button(&self, button: MouseButton, state: KeyState) -> Result<(), InputError>;
     fn scroll(&self, dx: f64, dy: f64) -> Result<(), InputError>;
     fn key(&self, key: Key, state: KeyState) -> Result<(), InputError>;
+    fn modifier(&self, modifier: Modifier, state: KeyState) -> Result<(), InputError>;
+    fn system_action(&self, action: SystemAction) -> Result<(), InputError>;
     fn shortcut(&self, modifiers: &[Modifier], key: Key) -> Result<(), InputError>;
     fn text(&self, text: &str) -> Result<(), InputError>;
 
@@ -223,6 +297,8 @@ pub trait InputDriver: Send + Sync {
             InputCommand::MouseButton { button, state } => self.mouse_button(*button, *state),
             InputCommand::Scroll { dx, dy } => self.scroll(*dx, *dy),
             InputCommand::Key { key, state } => self.key(*key, *state),
+            InputCommand::Modifier { modifier, state } => self.modifier(*modifier, *state),
+            InputCommand::System { action } => self.system_action(*action),
             InputCommand::Shortcut { modifiers, key } => self.shortcut(modifiers, *key),
             InputCommand::Text { text } => self.text(text),
         }
@@ -268,7 +344,19 @@ mod tests {
             key: Key::Q,
         }
         .validate()
+        .is_ok());
+        assert!(InputCommand::Shortcut {
+            modifiers: vec![Modifier::Meta],
+            key: Key::Home,
+        }
+        .validate()
         .is_err());
+        assert!(InputCommand::Shortcut {
+            modifiers: vec![Modifier::Meta, Modifier::Shift],
+            key: Key::Z,
+        }
+        .validate()
+        .is_ok());
     }
 
     #[test]

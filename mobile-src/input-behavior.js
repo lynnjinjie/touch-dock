@@ -9,11 +9,8 @@ export function scalePointerDelta(dx, dy, speed) {
   return { dx: dx * multiplier, dy: dy * multiplier };
 }
 
-export function clampScrollWidth(trackpadWidth, value) {
-  const availableWidth = Math.max(0, Number(trackpadWidth) || 0);
-  const maximumWidth = Math.max(38, availableWidth * 0.45);
-  const numeric = Number(value);
-  return Math.max(38, Math.min(maximumWidth, Number.isFinite(numeric) ? numeric : 38));
+export function scaleScrollDelta(delta, speed) {
+  return Number(delta) * clampPointerSpeed(speed);
 }
 
 export class HoldState {
