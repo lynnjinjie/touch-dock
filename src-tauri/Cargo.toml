@@ -1,6 +1,6 @@
 [package]
 name = "touch-dock"
-version = "0.2.0"
+version = "0.2.1"
 description = "Turn a phone browser into a secure local remote for a computer."
 authors = ["TouchDock"]
 edition = "2021"

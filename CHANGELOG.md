@@ -5,6 +5,8 @@ This file follows the versioned format used by GitHub Releases and Conventional 
 
 ## Unreleased
 
+## [v0.2.1](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.1) - 2026-07-13
+
 ### Build
 
 - publish macOS releases for Apple Silicon only
