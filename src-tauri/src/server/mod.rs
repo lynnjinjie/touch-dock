@@ -48,6 +48,7 @@ const COMMANDS_PER_SECOND: u32 = 240;
 const MOBILE_HTML: &str = include_str!("../../../mobile/index.html");
 const MOBILE_CSS: &str = include_str!("../../../mobile/style.css");
 const MOBILE_APP_JS: &str = include_str!("../../../mobile/app.js");
+const MOBILE_ICON: &[u8] = include_bytes!("../../icons/128x128.png");
 
 #[derive(Default)]
 struct HeldInputs {
@@ -194,6 +195,7 @@ impl RemoteServer {
             .route("/remote", get(remote_html))
             .route("/remote/style.css", get(remote_css))
             .route("/remote/app.js", get(remote_app_js))
+            .route("/remote/icon.png", get(remote_icon))
             .route("/remote/config.json", get(remote_config))
             .route("/ws", any(websocket))
             .with_state(Arc::clone(&state));
@@ -304,12 +306,27 @@ async fn remote_app_js() -> Response {
     static_response(MOBILE_APP_JS, "text/javascript; charset=utf-8")
 }
 
+async fn remote_icon() -> Response {
+    binary_static_response(MOBILE_ICON, "image/png")
+}
+
 async fn remote_config(State(state): State<Arc<ServiceState>>) -> Json<ControlLayout> {
     Json(state.control_layout.get())
 }
 
 fn static_response(body: &'static str, content_type: &'static str) -> Response {
     let mut response = HttpResponse::new(Body::from(body));
+    apply_static_headers(&mut response, content_type);
+    response
+}
+
+fn binary_static_response(body: &'static [u8], content_type: &'static str) -> Response {
+    let mut response = HttpResponse::new(Body::from(body));
+    apply_static_headers(&mut response, content_type);
+    response
+}
+
+fn apply_static_headers(response: &mut Response, content_type: &'static str) {
     *response.status_mut() = StatusCode::OK;
     let headers = response.headers_mut();
     headers.insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type));
@@ -328,7 +345,6 @@ fn static_response(body: &'static str, content_type: &'static str) -> Response {
         header::X_CONTENT_TYPE_OPTIONS,
         HeaderValue::from_static("nosniff"),
     );
-    response
 }
 
 async fn websocket(State(state): State<Arc<ServiceState>>, upgrade: WebSocketUpgrade) -> Response {
@@ -763,6 +779,15 @@ mod tests {
             .to_str()
             .unwrap()
             .contains("connect-src ws: wss:"));
+    }
+
+    #[test]
+    fn mobile_product_icon_uses_the_png_asset_contract() {
+        let response = binary_static_response(MOBILE_ICON, "image/png");
+        let headers = response.headers();
+        assert_eq!(headers[header::CONTENT_TYPE], "image/png");
+        assert_eq!(headers[header::CACHE_CONTROL], "no-store");
+        assert!(MOBILE_ICON.starts_with(b"\x89PNG\r\n\x1a\n"));
     }
 
     #[test]

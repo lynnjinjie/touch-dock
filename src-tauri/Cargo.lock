@@ -2526,6 +2526,7 @@ dependencies = [
  "block2",
  "objc2",
  "objc2-core-foundation",
+ "objc2-core-graphics",
  "objc2-foundation",
 ]
 
@@ -4620,7 +4621,7 @@ checksum = "756daf9b1013ebe47a8776667b466417e2d4c5679d441c26230efd9ef78692db"
 
 [[package]]
 name = "touch-dock"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "aes-gcm",
  "axum",
@@ -4632,6 +4633,9 @@ dependencies = [
  "hkdf",
  "hmac",
  "local-ip-address",
+ "objc2-app-kit",
+ "objc2-core-graphics",
+ "objc2-foundation",
  "p256",
  "qrcode",
  "reqwest 0.12.28",

@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
     <meta name="theme-color" content="#f5f7f7">
     <title>TouchDock Remote</title>
+    <link rel="icon" type="image/png" href="/remote/icon.png">
+    <link rel="apple-touch-icon" href="/remote/icon.png">
     <link rel="stylesheet" href="/remote/style.css">
   </head>
   <body>
     <main class="remote-shell" data-state="connecting" id="remoteShell">
       <header class="app-header">
-        <div class="brand-mark" aria-hidden="true">T</div>
+        <img class="brand-mark" src="/remote/icon.png" alt="">
         <div class="brand-copy"><strong>TouchDock</strong><span id="remoteSubtitle">Remote control</span></div>
         <div class="connection" id="connection" role="status" aria-live="polite"><i aria-hidden="true"></i><span id="connectionText">Connecting</span></div>
       </header>

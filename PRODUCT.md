@@ -16,7 +16,7 @@ TouchDock serves people who want to control a nearby Mac or Windows PC from a ph
 
 TouchDock turns a phone browser into a dependable local remote for a computer. The desktop app exposes a secure pairing QR code and connection status; the mobile web interface provides immediate pointer, click, scroll, keyboard, and shortcut control. Success means pairing takes seconds, input feels responsive, ordinary lock-screen interruptions recover without another scan, and the connection state is always understandable.
 
-The desktop app also owns controller configuration. Users can choose which fixed keys and actions appear on the phone, reorder them, create single-key or multi-modifier shortcuts, tune pointer and scroll speed, and hide optional trackpad controls. Layout, language, and appearance preferences persist on the computer and are served to the paired phone.
+The desktop app also owns controller configuration. Users can choose which fixed keys and actions appear on the phone, reorder them, create single-key or multi-modifier shortcuts, add confirmed presets for common application and media actions, tune pointer and scroll speed, and hide optional trackpad controls. Layout, language, and appearance preferences persist on the computer and are served to the paired phone.
 
 ## Positioning
 

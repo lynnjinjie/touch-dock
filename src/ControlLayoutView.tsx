@@ -1,4 +1,8 @@
-import { ArrowDown, ArrowUp, Check, Eye, EyeOff, GripVertical, Pencil, Plus, RotateCcw, X } from "lucide-react";
+import {
+  ArrowDown, ArrowUp, Check, CirclePlay, ClipboardPaste, Copy, Eye, EyeOff,
+  GripVertical, LogOut, PanelTopClose, PanelTopOpen, Pencil, Plus, RotateCcw, Undo2,
+  Volume1, Volume2, VolumeX, X, type LucideIcon,
+} from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { type CSSProperties, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { LanguagePreference } from "./i18n";
@@ -19,13 +23,31 @@ type Modifier = "control" | "option" | "shift" | "command";
 type ShortcutDraft = { id: string | null; label: string; modifiers: string; key: string };
 const STORAGE_KEY = "touchdock.control-layout";
 const keyOptions = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "Tab", "Space", "Enter", "Escape", "Backspace", "Delete", "Arrow Up", "Arrow Down", "F11"];
-const systemPresets: ControlItem[] = [
-  { id: "volume-up", label: "Volume up", detail: "System audio", symbol: "◕", visible: true, command: { kind: "system", action: "volume_up" } },
-  { id: "volume-down", label: "Volume down", detail: "System audio", symbol: "◔", visible: true, command: { kind: "system", action: "volume_down" } },
-  { id: "mute", label: "Mute audio", detail: "System audio", symbol: "⊘", visible: true, command: { kind: "system", action: "mute" } },
+const actionPresets: ControlItem[] = [
+  { id: "volume-up", label: "Volume up", detail: "System audio", symbol: "+", visible: true, command: { kind: "system", action: "volume_up" } },
+  { id: "volume-down", label: "Volume down", detail: "System audio", symbol: "−", visible: true, command: { kind: "system", action: "volume_down" } },
+  { id: "mute", label: "Mute audio", detail: "System audio", symbol: "×", visible: true, command: { kind: "system", action: "mute" } },
   { id: "play-pause", label: "Play / Pause", detail: "Media control", symbol: "▶", visible: true, command: { kind: "system", action: "play_pause" } },
-  { id: "lock-screen", label: "Lock screen", detail: "Confirmation required", symbol: "⌾", visible: true, command: { kind: "system", action: "lock_screen" } },
+  { id: "new-window", label: "New window", detail: "⌘ + N", symbol: "⌘N", visible: true, command: { kind: "shortcut", modifiers: ["meta"], key: "n" } },
+  { id: "close-window", label: "Close window", detail: "⌘ + W", symbol: "⌘W", visible: true, command: { kind: "shortcut", modifiers: ["meta"], key: "w" } },
+  { id: "quit-app", label: "Quit application", detail: "⌘ + Q", symbol: "⌘Q", visible: true, command: { kind: "shortcut", modifiers: ["meta"], key: "q" } },
+  { id: "copy", label: "Copy", detail: "⌘ + C", symbol: "⌘C", visible: true, command: { kind: "shortcut", modifiers: ["meta"], key: "c" } },
+  { id: "paste", label: "Paste", detail: "⌘ + V", symbol: "⌘V", visible: true, command: { kind: "shortcut", modifiers: ["meta"], key: "v" } },
+  { id: "undo", label: "Undo", detail: "⌘ + Z", symbol: "⌘Z", visible: true, command: { kind: "shortcut", modifiers: ["meta"], key: "z" } },
 ];
+
+const presetIcons: Record<string, LucideIcon> = {
+  "volume-up": Volume2,
+  "volume-down": Volume1,
+  mute: VolumeX,
+  "play-pause": CirclePlay,
+  "new-window": PanelTopOpen,
+  "close-window": PanelTopClose,
+  "quit-app": LogOut,
+  copy: Copy,
+  paste: ClipboardPaste,
+  undo: Undo2,
+};
 
 const defaultKeys: ControlItem[] = [
   { id: "escape", label: "Esc", detail: "Escape", symbol: "×", visible: true },
@@ -40,7 +62,7 @@ const defaultShortcuts: ControlItem[] = [
   { id: "search", label: "Search", detail: "⌘ + Space", symbol: "⌕", visible: true, command: { kind: "shortcut", modifiers: ["meta"], key: "space" } },
   { id: "overview", label: "Overview", detail: "⌃ + ↑", symbol: "⌃↑", visible: true, command: { kind: "shortcut", modifiers: ["control"], key: "arrow_up" } },
   { id: "show-desktop", label: "Show desktop", detail: "F11", symbol: "▦", visible: true, command: { kind: "key", key: "f11" } },
-  systemPresets[2],
+  actionPresets.find((item) => item.id === "mute")!,
 ];
 
 const keyValues: Record<string, string> = { ...Object.fromEntries([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].map((key) => [key, key.toLowerCase()])), Tab: "tab", Space: "space", Enter: "enter", Escape: "escape", Backspace: "backspace", Delete: "delete", "Arrow Up": "arrow_up", "Arrow Down": "arrow_down", F11: "f11" };
@@ -49,9 +71,10 @@ const modifierNames = ["Command", "Control", "Option", "Shift"] as const;
 const modifierSymbols: Record<string, string> = { Command: "⌘", Control: "⌃", Option: "⌥", Shift: "⇧" };
 const modifierDisplay: Record<string, string> = { meta: "Command", control: "Control", alt: "Option", shift: "Shift" };
 const keyDisplay = Object.fromEntries(Object.entries(keyValues).map(([label, value]) => [value, label]));
+const supportedSystemActions = new Set(["volume_up", "volume_down", "mute", "play_pause"]);
 
 function decorateAction(action: BackendLayout["actions"][number]): ControlItem {
-  const preset = systemPresets.find((item) => item.command?.kind === "system" && action.command.kind === "system" && item.command.action === action.command.action);
+  const preset = actionPresets.find((item) => item.id === action.id || (item.command?.kind === "system" && action.command.kind === "system" && item.command.action === action.command.action));
   if (preset) return { ...preset, id: action.id, label: action.label, visible: action.visible, command: action.command };
   const labels: Record<string, string> = { f: "F", c: "C", v: "V", z: "Z", tab: "Tab", space: "Space", arrow_up: "Arrow Up", arrow_down: "Arrow Down", f11: "F11" };
   const modifierLabels: Record<string, string> = { meta: "Command", control: "Control", alt: "Option", shift: "Shift" };
@@ -60,6 +83,11 @@ function decorateAction(action: BackendLayout["actions"][number]): ControlItem {
   const detail = [...modifiers, key].filter(Boolean).join(" + ");
   const symbol = detail.replace("Command", "⌘").replace("Control", "⌃").replace("Option", "⌥").replace("Shift", "⇧").split(" + ").join("").replace("Arrow Up", "↑").replace("Arrow Down", "↓").replace("Space", "␣").replace("Tab", "⇥");
   return { ...action, detail, symbol };
+}
+
+function ItemSymbol({ item }: { item: ControlItem }) {
+  const Icon = presetIcons[item.id];
+  return Icon ? <Icon aria-hidden="true" size={16} strokeWidth={1.8} /> : <>{item.symbol}</>;
 }
 
 function moveItem(items: ControlItem[], index: number, direction: -1 | 1) {
@@ -100,6 +128,7 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
   const [isRecordingShortcut, setIsRecordingShortcut] = useState(false);
   const isShortcutDialogOpen = shortcutDraft !== null;
   const [shortcutEditorTab, setShortcutEditorTab] = useState<"custom" | "presets">("presets");
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragTargetIndex, setDragTargetIndex] = useState<number | null>(null);
   const modifierPress = useRef<{ modifier: Modifier; startedAt: number; wasHeld: boolean } | null>(null);
@@ -112,7 +141,8 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
   const localizedLabels: Record<string, string> = zh ? {
     space: "空格", backspace: "删除", enter: "回车", "switch-apps": "切换应用", search: "搜索",
     overview: "调度中心", "show-desktop": "显示桌面", mute: "静音", "volume-up": "增大音量",
-    "volume-down": "减小音量", "play-pause": "播放 / 暂停", "lock-screen": "锁定屏幕",
+    "volume-down": "减小音量", "play-pause": "播放 / 暂停", "new-window": "新建窗口",
+    "close-window": "关闭窗口", "quit-app": "退出应用", copy: "复制", paste: "粘贴", undo: "撤销",
   } : {};
 
   function itemLabel(item: ControlItem) {
@@ -123,7 +153,7 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
     if (!zh) return item.detail;
     if (item.detail === "System audio") return "系统音频";
     if (item.detail === "Media control") return "媒体控制";
-    if (item.detail === "Confirmation required") return "需要确认";
+    if (item.detail === "Application shortcut") return "应用快捷键";
     return item.detail;
   }
 
@@ -134,7 +164,7 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
   useEffect(() => {
     invoke<BackendLayout>("control_layout").then((layout) => {
       setKeys(layout.keys.map((key) => ({ ...defaultKeys.find((item) => item.id === key.id)!, visible: key.visible })));
-      setShortcuts(layout.actions.map(decorateAction));
+      setShortcuts(layout.actions.filter((action) => action.command.kind !== "system" || supportedSystemActions.has(action.command.action)).map(decorateAction));
       setPointerSpeed(layout.trackpad.pointerSpeed);
       setScrollSpeed(layout.trackpad.scrollSpeed);
       setShowLeftClick(layout.trackpad.showLeftClick);
@@ -203,6 +233,7 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
     const key = command && command.kind !== "system" ? (keyDisplay[command.key] ?? "") : "";
     const modifiers = command?.kind === "shortcut" ? command.modifiers.map((value) => modifierDisplay[value]).filter(Boolean).join(" + ") || "None" : "None";
     setShortcutEditorTab(item ? "custom" : "presets");
+    setSelectedPresetId(null);
     setShortcutDraft({ id: item?.id ?? null, label: item?.label ?? "", modifiers, key });
   }
 
@@ -244,9 +275,17 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
     setIsRecordingShortcut(false);
   }
 
-  function addSystemPreset(preset: ControlItem) {
-    if (!shortcuts.some((item) => item.id === preset.id)) setShortcuts((current) => [...current, preset]);
+  function closeShortcutDialog() {
+    setIsRecordingShortcut(false);
+    setSelectedPresetId(null);
     setShortcutDraft(null);
+  }
+
+  function confirmPreset() {
+    const preset = actionPresets.find((item) => item.id === selectedPresetId);
+    if (!preset || shortcuts.some((item) => item.id === preset.id)) return;
+    setShortcuts((current) => [...current, preset]);
+    closeShortcutDialog();
   }
 
   function dropItem(targetSlot: number) {
@@ -290,12 +329,12 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
             {items.map((item, index) => (
               <div className={`control-row ${item.visible ? "" : "is-hidden"} ${draggedIndex === index ? "is-dragging" : ""} ${dragTargetIndex === index ? "is-drag-before" : ""} ${dragTargetIndex === index + 1 ? "is-drag-after" : ""}`} key={item.id} onDragOver={(event) => { event.preventDefault(); const bounds = event.currentTarget.getBoundingClientRect(); setDragTargetIndex(index + (event.clientY > bounds.top + bounds.height / 2 ? 1 : 0)); }} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragTargetIndex(null); }} onDrop={(event) => { event.preventDefault(); dropItem(dragTargetIndex ?? index); }}>
                 <span className="drag-handle" draggable title={zh ? "拖拽排序" : "Drag to reorder"} aria-hidden="true" onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", item.id); setDraggedIndex(index); }} onDragEnd={() => { setDraggedIndex(null); setDragTargetIndex(null); }}><GripVertical size={15} /></span>
-                <span className="control-symbol" aria-hidden="true">{item.symbol}</span>
+                <span className="control-symbol" aria-hidden="true"><ItemSymbol item={item} /></span>
                 <span className="control-copy"><strong>{itemLabel(item)}</strong><small>{itemDetail(item)}</small></span>
                 <div className="row-actions">
                   <button type="button" aria-label={`${zh ? "上移" : "Move up"} ${itemLabel(item)}`} title={zh ? "上移" : "Move up"} disabled={index === 0} onClick={() => setItems(moveItem(items, index, -1))}><ArrowUp aria-hidden="true" size={14} /></button>
                   <button type="button" aria-label={`${zh ? "下移" : "Move down"} ${itemLabel(item)}`} title={zh ? "下移" : "Move down"} disabled={index === items.length - 1} onClick={() => setItems(moveItem(items, index, 1))}><ArrowDown aria-hidden="true" size={14} /></button>
-                  {panel === "actions" && !systemPresets.some((preset) => preset.id === item.id) && <button type="button" aria-label={`${zh ? "编辑" : "Edit"} ${itemLabel(item)}`} title={zh ? "编辑" : "Edit"} onClick={() => editShortcut(item)}><Pencil aria-hidden="true" size={13} /></button>}
+                  {panel === "actions" && !actionPresets.some((preset) => preset.id === item.id) && <button type="button" aria-label={`${zh ? "编辑" : "Edit"} ${itemLabel(item)}`} title={zh ? "编辑" : "Edit"} onClick={() => editShortcut(item)}><Pencil aria-hidden="true" size={13} /></button>}
                   <button type="button" aria-pressed={item.visible} aria-label={`${item.visible ? (zh ? "隐藏" : "Hide") : (zh ? "显示" : "Show")} ${itemLabel(item)}`} title={item.visible ? (zh ? "隐藏" : "Hide") : (zh ? "显示" : "Show")} onClick={() => setItems(items.map((entry) => entry.id === item.id ? { ...entry, visible: !entry.visible } : entry))}>{item.visible ? <Eye aria-hidden="true" size={14} /> : <EyeOff aria-hidden="true" size={14} />}</button>
                 </div>
               </div>
@@ -315,21 +354,21 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
                 {([['control', '⌃'], ['option', '⌥'], ['shift', '⇧'], ['command', '⌘']] as const).map(([value, symbol]) => <button className={heldModifiers.includes(value) ? "active" : ""} key={value} type="button" aria-label={value} aria-pressed={heldModifiers.includes(value)} onPointerDown={(event) => startModifierPress(event, value)} onPointerUp={(event) => finishModifierPress(event, value)} onPointerCancel={(event) => finishModifierPress(event, value)}><b>{symbol}</b></button>)}
               </div>
               <p>{heldModifiers.length > 0 ? `${heldModifiers.map((value) => ({ control: "⌃", option: "⌥", shift: "⇧", command: "⌘" })[value]).join(" ")} ${zh ? "保持按下" : "held"}` : (zh ? "轻点锁定 · 长按临时按住" : "Tap to lock · Hold for momentary")}</p>
-            </div></div> : panel === "keys" ? <div className="phone-controls"><div className="preview-dpad"><span className="up">↑</span><span className="left">←</span><span className="down">↓</span><span className="right">→</span></div><div className="preview-key-row">{visibleKeys.map((item) => <span key={item.id}><b>{item.symbol}</b><small>{itemLabel(item)}</small></span>)}</div></div> : <div className="phone-controls preview-shortcuts">{visibleShortcuts.map((item) => <span key={item.id}><b>{item.symbol}</b><small>{itemLabel(item)}</small></span>)}</div>}
+            </div></div> : panel === "keys" ? <div className="phone-controls"><div className="preview-dpad"><span className="up">↑</span><span className="left">←</span><span className="down">↓</span><span className="right">→</span></div><div className="preview-key-row">{visibleKeys.map((item) => <span key={item.id}><b>{item.symbol}</b><small>{itemLabel(item)}</small></span>)}</div></div> : <div className="phone-controls preview-shortcuts">{visibleShortcuts.map((item) => <span key={item.id}><b><ItemSymbol item={item} /></b><small>{itemLabel(item)}</small></span>)}</div>}
             <footer><i aria-hidden="true"></i>{zh ? "命令已加密" : "Commands encrypted"}</footer>
           </div>
         </aside>
       </div>
-      {shortcutDraft && <dialog className="shortcut-dialog" ref={shortcutDialogRef} aria-labelledby="shortcut-dialog-title" onCancel={(event) => { event.preventDefault(); setShortcutDraft(null); }} onClick={(event) => { if (event.currentTarget === event.target) setShortcutDraft(null); }}>
+      {shortcutDraft && <dialog className="shortcut-dialog" ref={shortcutDialogRef} aria-labelledby="shortcut-dialog-title" onCancel={(event) => { event.preventDefault(); closeShortcutDialog(); }} onClick={(event) => { if (event.currentTarget === event.target) closeShortcutDialog(); }}>
         <div className="shortcut-dialog-panel">
-          <header><div><h2 id="shortcut-dialog-title">{shortcutDraft.id ? (zh ? "编辑快捷操作" : "Edit action") : (zh ? "添加快捷操作" : "Add action")}</h2><p>{zh ? "选择系统预设，或创建单键与组合键操作。" : "Choose a system preset or create a single-key or key-combination action."}</p></div><button type="button" aria-label={zh ? "关闭" : "Close"} onClick={() => setShortcutDraft(null)}><X aria-hidden="true" size={16} /></button></header>
-          {!shortcutDraft.id && <div className="shortcut-dialog-tabs" role="tablist"><button className={shortcutEditorTab === "presets" ? "active" : ""} type="button" role="tab" aria-selected={shortcutEditorTab === "presets"} onClick={() => setShortcutEditorTab("presets")}>{zh ? "系统预设" : "System presets"}</button><button className={shortcutEditorTab === "custom" ? "active" : ""} type="button" role="tab" aria-selected={shortcutEditorTab === "custom"} onClick={() => setShortcutEditorTab("custom")}>{zh ? "自定义" : "Custom"}</button></div>}
-          {shortcutEditorTab === "presets" && !shortcutDraft.id ? <div className="preset-list">{systemPresets.map((preset) => { const added = shortcuts.some((item) => item.id === preset.id); return <button type="button" key={preset.id} disabled={added} onClick={() => addSystemPreset(preset)}><span className="control-symbol" aria-hidden="true">{preset.symbol}</span><span><strong>{itemLabel(preset)}</strong><small>{preset.id === "lock-screen" ? (zh ? "执行时需要确认" : "Confirmation required when used") : itemDetail(preset)}</small></span><em>{added ? (zh ? "已添加" : "Added") : <Plus aria-hidden="true" size={14} />}</em></button>; })}</div> : <div className="shortcut-form">
+          <header><div><h2 id="shortcut-dialog-title">{shortcutDraft.id ? (zh ? "编辑快捷操作" : "Edit action") : (zh ? "添加快捷操作" : "Add action")}</h2><p>{zh ? "选择预设，或创建单键与组合键操作。" : "Choose a preset or create a single-key or key-combination action."}</p></div><button type="button" aria-label={zh ? "关闭" : "Close"} onClick={closeShortcutDialog}><X aria-hidden="true" size={16} /></button></header>
+          {!shortcutDraft.id && <div className="shortcut-dialog-tabs" role="tablist"><button className={shortcutEditorTab === "presets" ? "active" : ""} type="button" role="tab" aria-selected={shortcutEditorTab === "presets"} onClick={() => setShortcutEditorTab("presets")}>{zh ? "常用预设" : "Presets"}</button><button className={shortcutEditorTab === "custom" ? "active" : ""} type="button" role="tab" aria-selected={shortcutEditorTab === "custom"} onClick={() => setShortcutEditorTab("custom")}>{zh ? "自定义" : "Custom"}</button></div>}
+          {shortcutEditorTab === "presets" && !shortcutDraft.id ? <div className="preset-dialog-body"><div className="preset-list">{actionPresets.map((preset) => { const added = shortcuts.some((item) => item.id === preset.id); const selected = selectedPresetId === preset.id; return <button type="button" key={preset.id} className={selected ? "selected" : ""} disabled={added} aria-pressed={selected} onClick={() => setSelectedPresetId(selected ? null : preset.id)}><span className="control-symbol" aria-hidden="true"><ItemSymbol item={preset} /></span><span><strong>{itemLabel(preset)}</strong><small>{itemDetail(preset)}</small></span><em>{added ? (zh ? "已添加" : "Added") : selected ? <Check aria-hidden="true" size={14} /> : <Plus aria-hidden="true" size={14} />}</em></button>; })}</div><footer className="preset-dialog-footer"><button type="button" onClick={closeShortcutDialog}>{zh ? "取消" : "Cancel"}</button><button className="primary" type="button" disabled={!selectedPresetId} onClick={confirmPreset}><Check aria-hidden="true" size={13} />{zh ? "添加" : "Add"}</button></footer></div> : <div className="shortcut-form">
             <label><span>{zh ? "名称" : "Name"}</span><input autoFocus type="text" maxLength={24} value={shortcutDraft.label} placeholder={zh ? "例如：打开文件" : "e.g. Open file"} onFocus={() => setIsRecordingShortcut(false)} onChange={(event) => setShortcutDraft({ ...shortcutDraft, label: event.target.value })} /></label>
             <div className="shortcut-modifier-field"><span>{zh ? "修饰键（可多选）" : "Modifiers (select multiple)"}</span><div className="shortcut-modifier-picker">{modifierNames.map((modifier) => { const selected = shortcutDraft.modifiers !== "None" && shortcutDraft.modifiers.split(" + ").includes(modifier); return <button key={modifier} type="button" className={selected ? "active" : ""} aria-pressed={selected} onClick={() => toggleDraftModifier(modifier)}><b aria-hidden="true">{modifierSymbols[modifier]}</b>{modifier}</button>; })}</div></div>
             <label><span>{zh ? "录制主键" : "Record main key"}</span><button className={`shortcut-recorder ${isRecordingShortcut ? "is-recording" : ""}`} type="button" aria-pressed={isRecordingShortcut} onClick={() => setIsRecordingShortcut(true)}><kbd aria-live="polite">{isRecordingShortcut ? (zh ? "正在录制…" : "Recording…") : shortcutDraft.key || (zh ? "点击开始录制" : "Click to record")}</kbd><small>{isRecordingShortcut ? (zh ? "只按主键，不要按修饰键" : "Press only the main key, without modifiers") : (zh ? "修饰键请在上方选择" : "Select modifiers above")}</small></button></label>
             <div className="shortcut-preview"><span>{zh ? "将发送" : "Sends"}</span><strong>{shortcutDraft.key ? (shortcutDraft.modifiers === "None" ? shortcutDraft.key : `${shortcutDraft.modifiers} + ${shortcutDraft.key}`) : (zh ? "尚未录制" : "Not recorded")}</strong></div>
-            <footer><button type="button" onClick={() => setShortcutDraft(null)}>{zh ? "取消" : "Cancel"}</button><button className="primary" type="button" disabled={!shortcutDraft.label.trim() || !shortcutDraft.key} onClick={saveShortcut}><Check aria-hidden="true" size={13} />{zh ? "完成" : "Done"}</button></footer>
+            <footer><button type="button" onClick={closeShortcutDialog}>{zh ? "取消" : "Cancel"}</button><button className="primary" type="button" disabled={!shortcutDraft.label.trim() || !shortcutDraft.key} onClick={saveShortcut}><Check aria-hidden="true" size={13} />{zh ? "完成" : "Done"}</button></footer>
           </div>}
         </div>
       </dialog>}

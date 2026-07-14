@@ -68,7 +68,7 @@ pub enum ErrorCode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input::{Key, Modifier};
+    use crate::input::{Key, Modifier, SystemAction};
 
     #[test]
     fn parses_a_typed_shortcut_command() {
@@ -130,12 +130,38 @@ mod tests {
             ClientMessage::Command {
                 request_id: 9,
                 command: InputCommand::System {
-                    action: crate::input::SystemAction::Mute,
+                    action: SystemAction::Mute,
                 },
             }
         );
         assert!(serde_json::from_str::<ClientMessage>(
             r#"{"type":"command","request_id":10,"command":{"kind":"system","action":"shell"}}"#
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn parses_supported_media_actions_and_rejects_lock_screen() {
+        for (action_name, action) in [
+            ("volume_up", SystemAction::VolumeUp),
+            ("volume_down", SystemAction::VolumeDown),
+            ("play_pause", SystemAction::PlayPause),
+        ] {
+            let json = format!(
+                r#"{{"type":"command","request_id":11,"command":{{"kind":"system","action":"{action_name}"}}}}"#
+            );
+            let message: ClientMessage = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                message,
+                ClientMessage::Command {
+                    request_id: 11,
+                    command: InputCommand::System { action },
+                }
+            );
+        }
+
+        assert!(serde_json::from_str::<ClientMessage>(
+            r#"{"type":"command","request_id":12,"command":{"kind":"system","action":"lock_screen"}}"#
         )
         .is_err());
     }

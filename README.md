@@ -10,7 +10,7 @@ TouchDock turns a phone browser on the same local network into a trackpad and ke
 - Encrypted `Reconnect` after lock screen, browser suspension, or temporary network loss without another scan
 - Trackpad movement, configurable pointer and scroll speed, left and right click, double click, hold, and scrolling
 - Text entry, independently held modifier keys, arrow keys, configurable utility keys, and common shortcuts
-- Persistent desktop control-layout editor with reordering, visibility controls, custom single keys, multi-modifier shortcuts, and a mute action
+- Persistent desktop control-layout editor with reordering, visibility controls, custom single keys, multi-modifier shortcuts, confirmed presets, and native media controls
 - English and Simplified Chinese interfaces with light, dark, and system themes
 - macOS menu-bar and Windows system-tray access for opening TouchDock and Settings
 - Startup update checks with 24-hour throttling, manual checks, and an update badge
@@ -25,7 +25,7 @@ TouchDock uses Tauri 2 for the cross-platform desktop shell and isolates platfor
 Desktop UI          React 19 + TypeScript + Vite 7
 Mobile Controller   Browser UI + bundled audited crypto primitives
 Core Service        Rust HTTP/WebSocket, pairing, encryption and sessions
-Input Drivers       macOS CGEvent / Windows SendInput
+Input Drivers       macOS CGEvent + CoreAudio / Windows SendInput
 Desktop Shell       Tauri 2
 ```
 
@@ -113,7 +113,7 @@ The command channel is authenticated and encrypted at the application layer even
 
 ## Roadmap
 
-1. Complete confirmed cross-platform system actions such as lock screen and media controls.
+1. Add an explicitly confirmed cross-platform lock-screen action.
 2. Add trusted mobile asset delivery or authenticated local TLS.
 3. Add production code signing and notarization for release installers.
 
@@ -124,8 +124,8 @@ GitHub Actions runs the frontend build, mobile controller tests, and Rust tests 
 To publish a release, update the version in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, commit the change, then push a matching version tag:
 
 ```bash
-git tag v0.2.2
-git push origin v0.2.2
+git tag v0.2.3
+git push origin v0.2.3
 ```
 
 The release workflow builds TouchDock for Apple Silicon macOS and Windows, then creates a GitHub Release and uploads the installers. Release notes are generated from Conventional Commit subjects, grouped by change type, linked to each commit, and finished with a full comparison link. The workflow can also be run manually with an existing tag to rebuild only its Apple Silicon artifact. The macOS artifact currently uses an ad-hoc signature so the complete app bundle remains internally valid without unavailable Apple certificates. Users must still allow the app in macOS Privacy & Security after downloading it. Trusted public distribution should configure valid Developer ID and notarization credentials described by the Tauri signing documentation.

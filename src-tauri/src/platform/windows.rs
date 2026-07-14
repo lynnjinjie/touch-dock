@@ -8,8 +8,8 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
     MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP,
     MOUSEEVENTF_MOVE, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_WHEEL, MOUSEINPUT,
     MOUSE_EVENT_FLAGS, VIRTUAL_KEY, VK_BACK, VK_CONTROL, VK_DELETE, VK_DOWN, VK_END, VK_ESCAPE,
-    VK_HOME, VK_LEFT, VK_LWIN, VK_MENU, VK_NEXT, VK_PRIOR, VK_RETURN, VK_RIGHT, VK_SHIFT, VK_SPACE,
-    VK_TAB, VK_UP,
+    VK_HOME, VK_LEFT, VK_LWIN, VK_MEDIA_PLAY_PAUSE, VK_MENU, VK_NEXT, VK_PRIOR, VK_RETURN,
+    VK_RIGHT, VK_SHIFT, VK_SPACE, VK_TAB, VK_UP, VK_VOLUME_DOWN, VK_VOLUME_MUTE, VK_VOLUME_UP,
 };
 
 pub struct WindowsInputDriver;
@@ -151,12 +151,16 @@ impl InputDriver for WindowsInputDriver {
     }
 
     fn system_action(&self, action: SystemAction) -> Result<(), InputError> {
-        match action {
-            SystemAction::Mute => Self::send(&[
-                Self::keyboard(Key::Mute, KeyState::Down),
-                Self::keyboard(Key::Mute, KeyState::Up),
-            ]),
-        }
+        let key = match action {
+            SystemAction::VolumeUp => VK_VOLUME_UP,
+            SystemAction::VolumeDown => VK_VOLUME_DOWN,
+            SystemAction::Mute => VK_VOLUME_MUTE,
+            SystemAction::PlayPause => VK_MEDIA_PLAY_PAUSE,
+        };
+        Self::send(&[
+            Self::virtual_keyboard(key, KEYBD_EVENT_FLAGS::default()),
+            Self::virtual_keyboard(key, KEYEVENTF_KEYUP),
+        ])
     }
 
     fn shortcut(&self, modifiers: &[Modifier], key: Key) -> Result<(), InputError> {

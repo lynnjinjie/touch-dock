@@ -1,6 +1,6 @@
 [package]
 name = "touch-dock"
-version = "0.2.2"
+version = "0.2.3"
 description = "Turn a phone browser into a secure local remote for a computer."
 authors = ["TouchDock"]
 edition = "2021"
@@ -37,6 +37,9 @@ zeroize = { version = "1.8", features = ["derive"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = { version = "0.25", features = ["highsierra"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["NSEvent", "NSGraphicsContext", "objc2-core-graphics"] }
+objc2-core-graphics = { version = "0.3", default-features = false, features = ["CGEvent", "CGEventTypes"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["NSGeometry"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.61", features = [

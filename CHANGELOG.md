@@ -5,6 +5,19 @@ This file follows the versioned format used by GitHub Releases and Conventional 
 
 ## Unreleased
 
+## [v0.2.3](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.3) - 2026-07-14
+
+### Features
+
+- add staged media and application presets that are applied only after confirmation
+
+### Bug Fixes
+
+- preserve explicit macOS modifier flags across custom shortcut key-down and key-up events
+- route volume and playback presets through the encrypted mobile channel to native macOS and Windows handlers
+- use matching action icons in the layout editor and mobile preview
+- replace the mobile controller placeholder mark and browser icon with the TouchDock product icon
+
 ## [v0.2.2](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.2) - 2026-07-13
 
 ### Bug Fixes

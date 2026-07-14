@@ -208,6 +208,8 @@ Short taps produce native clicks, two taps produce a native double click, and ho
 
 The desktop layout editor uses stable tabs for Trackpad, Keys, and Actions with a compact phone preview. Keys and actions support explicit visibility and ordering. Custom actions are edited in a modal: a user names the action, selects zero to four modifiers, then records one main key. Recording captures at the window level while active, gives immediate visible feedback, and stops when the user returns to a text field.
 
+Preset actions use matching product icons and cover approved media controls plus common application commands. Choosing a preset only stages it; the layout changes after the user confirms with the modal's bottom action. The mobile header, browser tab, and iOS home-screen metadata reuse the same TouchDock product icon as the desktop app.
+
 The mobile Actions view remains a compact two-column grid that preserves the desktop order. Labels are localized by the desktop language setting, while user-authored names remain unchanged.
 
 ### Settings And Updates

@@ -81,7 +81,10 @@ pub enum Key {
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum SystemAction {
+    VolumeUp,
+    VolumeDown,
     Mute,
+    PlayPause,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

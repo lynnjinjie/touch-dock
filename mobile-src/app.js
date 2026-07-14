@@ -127,7 +127,8 @@ const keyPresentation = {
 const actionKeyLabel = { tab: "Tab", space: "Space", enter: "Enter", escape: "Esc", backspace: "Delete", delete: "Delete", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
 const actionKeySymbol = { tab: "⇥", space: "␣", enter: "↵", escape: "×", backspace: "⌫", delete: "⌦", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
 const modifierLabel = { meta: "⌘", control: "⌃", alt: "⌥", shift: "⇧" };
-const systemPresentation = { volume_up: ["◕", "System audio"], volume_down: ["◔", "System audio"], mute: ["⊘", "System audio"], play_pause: ["▶", "Media control"], lock_screen: ["⌾", "Confirmation required"] };
+const systemPresentation = { volume_up: ["＋", "System audio"], volume_down: ["−", "System audio"], mute: ["×", "System audio"], play_pause: ["▶", "Media control"] };
+const supportedSystemActions = new Set(Object.keys(systemPresentation));
 
 function actionPresentation(commandValue) {
   if (commandValue.kind === "system") return systemPresentation[commandValue.action] ?? ["•", "System action"];
@@ -142,9 +143,9 @@ function applyLayout(layout) {
   const language = layout.language === "zh-CN" ? "zh-CN" : "en";
   currentLanguage = language;
   const text = copy[language];
-  const builtInLabels = language === "zh-CN" ? { "switch-apps": "切换应用", search: "搜索", overview: "调度中心", desktop: "显示桌面", "show-desktop": "显示桌面", mute: "静音", "volume-up": "增大音量", "volume-down": "减小音量", "play-pause": "播放 / 暂停", "lock-screen": "锁定屏幕" } : {};
-  const builtInLabelByEnglish = language === "zh-CN" ? { "Switch apps": "切换应用", Search: "搜索", Overview: "调度中心", "Show desktop": "显示桌面", "Mute audio": "静音", "Volume up": "增大音量", "Volume down": "减小音量", "Play / Pause": "播放 / 暂停", "Lock screen": "锁定屏幕" } : {};
-  const builtInDetails = language === "zh-CN" ? { "System audio": "系统音频", "Media control": "媒体控制", "Confirmation required": "需要确认" } : {};
+  const builtInLabels = language === "zh-CN" ? { "switch-apps": "切换应用", search: "搜索", overview: "调度中心", desktop: "显示桌面", "show-desktop": "显示桌面", mute: "静音", "volume-up": "增大音量", "volume-down": "减小音量", "play-pause": "播放 / 暂停", "new-window": "新建窗口", "close-window": "关闭窗口", "quit-app": "退出应用", copy: "复制", paste: "粘贴", undo: "撤销" } : {};
+  const builtInLabelByEnglish = language === "zh-CN" ? { "Switch apps": "切换应用", Search: "搜索", Overview: "调度中心", "Show desktop": "显示桌面", "Mute audio": "静音", "Volume up": "增大音量", "Volume down": "减小音量", "Play / Pause": "播放 / 暂停", "New window": "新建窗口", "Close window": "关闭窗口", "Quit application": "退出应用", Copy: "复制", Paste: "粘贴", Undo: "撤销" } : {};
+  const builtInDetails = language === "zh-CN" ? { "System audio": "系统音频", "Media control": "媒体控制" } : {};
   document.documentElement.lang = language;
   document.title = language === "zh-CN" ? "TouchDock 遥控器" : "TouchDock Remote";
   document.querySelector("#remoteSubtitle").textContent = text.subtitle;
@@ -180,7 +181,7 @@ function applyLayout(layout) {
     return button;
   }));
   const actions = document.querySelector("#shortcutsPanel");
-  actions.replaceChildren(...layout.actions.filter((item) => item.visible).map((item) => {
+  actions.replaceChildren(...layout.actions.filter((item) => item.visible && (item.command.kind !== "system" || supportedSystemActions.has(item.command.action))).map((item) => {
     const [symbol, detail] = actionPresentation(item.command);
     const button = document.createElement("button");
     button.className = "shortcut"; button.type = "button"; button._command = item.command;
@@ -459,7 +460,7 @@ for (const button of document.querySelectorAll(".shortcut")) {
     const value = button._command;
     if (value.kind === "shortcut") command(value);
     else if (value.kind === "key") pressKey(value.key);
-    else if (value.action === "mute") command({ kind: "system", action: "mute" });
+    else if (value.kind === "system" && ["volume_up", "volume_down", "mute", "play_pause"].includes(value.action)) command(value);
   });
 }
 
