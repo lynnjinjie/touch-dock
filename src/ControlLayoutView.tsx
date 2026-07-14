@@ -51,9 +51,9 @@ const presetIcons: Record<string, LucideIcon> = {
 
 const defaultKeys: ControlItem[] = [
   { id: "escape", label: "Esc", detail: "Escape", symbol: "×", visible: true },
+  { id: "backspace", label: "Delete", detail: "Backspace", symbol: "⌫", visible: true },
   { id: "tab", label: "Tab", detail: "Tab", symbol: "⇥", visible: true },
   { id: "space", label: "Space", detail: "Space", symbol: "␣", visible: true },
-  { id: "backspace", label: "Delete", detail: "Backspace", symbol: "⌫", visible: true },
   { id: "enter", label: "Enter", detail: "Enter", symbol: "↵", visible: true },
 ];
 
@@ -72,6 +72,8 @@ const modifierSymbols: Record<string, string> = { Command: "⌘", Control: "⌃"
 const modifierDisplay: Record<string, string> = { meta: "Command", control: "Control", alt: "Option", shift: "Shift" };
 const keyDisplay = Object.fromEntries(Object.entries(keyValues).map(([label, value]) => [value, label]));
 const supportedSystemActions = new Set(["volume_up", "volume_down", "mute", "play_pause"]);
+const legacyKeyOrder = ["escape", "tab", "space", "backspace", "enter"];
+const defaultKeyOrder = ["escape", "backspace", "tab", "space", "enter"];
 
 function decorateAction(action: BackendLayout["actions"][number]): ControlItem {
   const preset = actionPresets.find((item) => item.id === action.id || (item.command?.kind === "system" && action.command.kind === "system" && item.command.action === action.command.action));
@@ -83,6 +85,11 @@ function decorateAction(action: BackendLayout["actions"][number]): ControlItem {
   const detail = [...modifiers, key].filter(Boolean).join(" + ");
   const symbol = detail.replace("Command", "⌘").replace("Control", "⌃").replace("Option", "⌥").replace("Shift", "⇧").split(" + ").join("").replace("Arrow Up", "↑").replace("Arrow Down", "↓").replace("Space", "␣").replace("Tab", "⇥");
   return { ...action, detail, symbol };
+}
+
+function normalizeKeyOrder(items: ControlItem[]) {
+  if (items.map((item) => item.id).join() !== legacyKeyOrder.join()) return items;
+  return defaultKeyOrder.map((id) => items.find((item) => item.id === id)!);
 }
 
 function ItemSymbol({ item }: { item: ControlItem }) {
@@ -104,7 +111,7 @@ function readSavedLayout() {
     if (saved && Array.isArray(saved.keys) && Array.isArray(saved.shortcuts)) {
       const allowedKeyIds = new Set(defaultKeys.map((item) => item.id));
       const migratedKeys = saved.keys.filter((item) => allowedKeyIds.has(item.id));
-      return { keys: migratedKeys.length ? migratedKeys : defaultKeys, shortcuts: saved.shortcuts, pointerSpeed: saved.pointerSpeed ?? 1.3, scrollSpeed: saved.scrollSpeed ?? 1.3, showLeftClick: saved.showLeftClick ?? true, showRightClick: saved.showRightClick ?? true, showModifiers: saved.showModifiers ?? true };
+      return { keys: normalizeKeyOrder(migratedKeys.length ? migratedKeys : defaultKeys), shortcuts: saved.shortcuts, pointerSpeed: saved.pointerSpeed ?? 1.3, scrollSpeed: saved.scrollSpeed ?? 1.3, showLeftClick: saved.showLeftClick ?? true, showRightClick: saved.showRightClick ?? true, showModifiers: saved.showModifiers ?? true };
     }
   } catch {
     // Invalid local prototypes fall back to the product defaults.
@@ -136,7 +143,7 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
   const backendReady = useRef(false);
   const items = panel === "keys" ? keys : shortcuts;
   const setItems = panel === "keys" ? setKeys : setShortcuts;
-  const visibleKeys = useMemo(() => keys.filter((item) => item.visible), [keys]);
+  const previewKeys = useMemo(() => normalizeKeyOrder(keys).map((item, slot) => ({ item, slot })).filter(({ item }) => item.visible), [keys]);
   const visibleShortcuts = useMemo(() => shortcuts.filter((item) => item.visible), [shortcuts]);
   const localizedLabels: Record<string, string> = zh ? {
     space: "空格", backspace: "删除", enter: "回车", "switch-apps": "切换应用", search: "搜索",
@@ -163,7 +170,7 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
 
   useEffect(() => {
     invoke<BackendLayout>("control_layout").then((layout) => {
-      setKeys(layout.keys.map((key) => ({ ...defaultKeys.find((item) => item.id === key.id)!, visible: key.visible })));
+      setKeys(normalizeKeyOrder(layout.keys.map((key) => ({ ...defaultKeys.find((item) => item.id === key.id)!, visible: key.visible }))));
       setShortcuts(layout.actions.filter((action) => action.command.kind !== "system" || supportedSystemActions.has(action.command.action)).map(decorateAction));
       setPointerSpeed(layout.trackpad.pointerSpeed);
       setScrollSpeed(layout.trackpad.scrollSpeed);
@@ -354,7 +361,7 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
                 {([['control', '⌃'], ['option', '⌥'], ['shift', '⇧'], ['command', '⌘']] as const).map(([value, symbol]) => <button className={heldModifiers.includes(value) ? "active" : ""} key={value} type="button" aria-label={value} aria-pressed={heldModifiers.includes(value)} onPointerDown={(event) => startModifierPress(event, value)} onPointerUp={(event) => finishModifierPress(event, value)} onPointerCancel={(event) => finishModifierPress(event, value)}><b>{symbol}</b></button>)}
               </div>
               <p>{heldModifiers.length > 0 ? `${heldModifiers.map((value) => ({ control: "⌃", option: "⌥", shift: "⇧", command: "⌘" })[value]).join(" ")} ${zh ? "保持按下" : "held"}` : (zh ? "轻点锁定 · 长按临时按住" : "Tap to lock · Hold for momentary")}</p>
-            </div></div> : panel === "keys" ? <div className="phone-controls"><div className="preview-dpad"><span className="up">↑</span><span className="left">←</span><span className="down">↓</span><span className="right">→</span></div><div className="preview-key-row">{visibleKeys.map((item) => <span key={item.id}><b>{item.symbol}</b><small>{itemLabel(item)}</small></span>)}</div></div> : <div className="phone-controls preview-shortcuts">{visibleShortcuts.map((item) => <span key={item.id}><b><ItemSymbol item={item} /></b><small>{itemLabel(item)}</small></span>)}</div>}
+            </div></div> : panel === "keys" ? <div className="phone-controls"><div className="preview-dpad"><span className="up">↑</span><span className="left">←</span><span className="down">↓</span><span className="right">→</span></div><div className="preview-key-row">{previewKeys.map(({ item, slot }) => <span className={`preview-key-slot-${slot} ${item.id === "space" ? "preview-space-key" : ""}`} key={item.id}><b>{item.id === "escape" ? "esc" : item.id === "space" ? "" : item.symbol}</b>{item.id === "space" && <i aria-hidden="true"></i>}{item.id !== "escape" && <small>{itemLabel(item)}</small>}</span>)}</div></div> : <div className="phone-controls preview-shortcuts">{visibleShortcuts.map((item) => <span key={item.id}><b><ItemSymbol item={item} /></b><small>{itemLabel(item)}</small></span>)}</div>}
             <footer><i aria-hidden="true"></i>{zh ? "命令已加密" : "Commands encrypted"}</footer>
           </div>
         </aside>

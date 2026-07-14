@@ -36,6 +36,11 @@ interface ToastState {
   message: string;
 }
 
+interface DockVisibility {
+  supported: boolean;
+  visible: boolean;
+}
+
 function ReadinessRow({
   label,
   detail,
@@ -71,6 +76,8 @@ function App() {
   const [theme, setTheme] = useState<ThemePreference>(readThemePreference);
   const [language, setLanguage] = useState<LanguagePreference>(readLanguagePreference);
   const [updateState, setUpdateState] = useState<UpdateState>(readCachedUpdateState);
+  const [dockVisibility, setDockVisibility] = useState<DockVisibility | null>(null);
+  const [dockVisibilityPending, setDockVisibilityPending] = useState(false);
   const toastTimer = useRef<number | undefined>(undefined);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const t = useMemo(() => createTranslator(language), [language]);
@@ -135,6 +142,23 @@ function App() {
   useEffect(() => {
     void checkUpdates(false);
   }, [checkUpdates]);
+
+  useEffect(() => {
+    void invoke<DockVisibility>("dock_visibility")
+      .then(setDockVisibility)
+      .catch(() => { /* Browser previews do not expose Tauri commands. */ });
+  }, []);
+
+  async function changeDockVisibility(visible: boolean) {
+    setDockVisibilityPending(true);
+    try {
+      setDockVisibility(await invoke<DockVisibility>("set_dock_visibility", { visible }));
+    } catch {
+      showToast(t("dockVisibilityFailed"));
+    } finally {
+      setDockVisibilityPending(false);
+    }
+  }
 
   function closeSettings() {
     setSettingsOpen(false);
@@ -257,7 +281,7 @@ function App() {
           )}
         </main>
       </div>
-      {settingsOpen && <SettingsDialog theme={theme} onThemeChange={setTheme} language={language} onLanguageChange={setLanguage} updateState={updateState} onCheckForUpdates={() => void checkUpdates(true)} onOpenUpdate={() => void openUpdate()} onClose={closeSettings} />}
+      {settingsOpen && <SettingsDialog theme={theme} onThemeChange={setTheme} language={language} onLanguageChange={setLanguage} updateState={updateState} onCheckForUpdates={() => void checkUpdates(true)} onOpenUpdate={() => void openUpdate()} dockVisibility={dockVisibility} dockVisibilityPending={dockVisibilityPending} onDockVisibilityChange={(visible) => void changeDockVisibility(visible)} onClose={closeSettings} />}
       <div className={`toast ${toast ? "show" : ""}`} role="status" aria-live="polite" key={toast?.id}>{toast?.message}</div>
     </>
   );

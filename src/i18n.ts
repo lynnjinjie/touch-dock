@@ -92,6 +92,9 @@ const en = {
   system: "System",
   language: "Language",
   languageDescription: "Choose the display language for TouchDock.",
+  showInDock: "Show in Dock",
+  showInDockDescription: "Keep TouchDock in the macOS Dock. The menu bar icon remains available when this is off.",
+  dockVisibilityFailed: "Could not update Dock visibility.",
   english: "English",
   simplifiedChinese: "简体中文",
   version: "Version {version}",
@@ -133,7 +136,7 @@ const zhCN: Record<TranslationKey, string> = {
   localNetworkOnly: "仅限本地网络", localNetworkOnlyBody: "控制器服务不会发布到互联网。", commandAllowlist: "命令白名单",
   commandAllowlistBody: "仅接受经过验证的鼠标、键盘、文本和已批准的快捷键命令。", on: "已启用", localHttpBoundary: "本地 HTTP 边界",
   localHttpBoundaryBody: "配对后命令会被加密。在加入可信本地 TLS 前，初始手机页面仍通过本地 HTTP 提供。",
-  appearance: "外观", general: "通用", theme: "主题", themeDescription: "选择 TouchDock 在这台电脑上的显示外观。", light: "浅色", dark: "深色", system: "跟随系统", language: "语言", languageDescription: "选择 TouchDock 的显示语言。", english: "English", simplifiedChinese: "简体中文",
+  appearance: "外观", general: "通用", theme: "主题", themeDescription: "选择 TouchDock 在这台电脑上的显示外观。", light: "浅色", dark: "深色", system: "跟随系统", language: "语言", languageDescription: "选择 TouchDock 的显示语言。", showInDock: "在 Dock 中显示", showInDockDescription: "控制 TouchDock 是否显示在 macOS Dock 中。关闭后仍可使用菜单栏图标。", dockVisibilityFailed: "无法更新 Dock 显示设置。", english: "English", simplifiedChinese: "简体中文",
   version: "版本 {version}", checkForUpdates: "检查更新", checkingForUpdates: "正在检查…", automaticUpdateChecks: "TouchDock 会在启动时检查更新，每 24 小时最多一次。", upToDate: "TouchDock 已是最新版本。", updateAvailable: "有可用更新", newVersionAvailable: "版本 {version} 已发布。", updateCheckFailed: "无法检查更新，请稍后重试。", viewUpdate: "查看更新", openUpdateFailed: "无法打开更新页面。",
 };
 

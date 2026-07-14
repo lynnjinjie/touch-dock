@@ -5,6 +5,7 @@ import {
   HoldState,
   TapDetector,
   clampPointerSpeed,
+  normalizeUtilityKeyOrder,
   scalePointerDelta,
   scaleScrollDelta,
 } from "./input-behavior.js";
@@ -44,4 +45,18 @@ test("scroll speed is bounded and scales the travelled distance", () => {
   assert.equal(scaleScrollDelta(10, 0.1), 5);
   assert.equal(scaleScrollDelta(10, 1.5), 15);
   assert.equal(scaleScrollDelta(10, 4), 30);
+});
+
+test("legacy utility keys migrate to keyboard slots without changing custom orders", () => {
+  const legacy = ["escape", "tab", "space", "backspace", "enter"].map((id) => ({ id }));
+  assert.deepEqual(normalizeUtilityKeyOrder(legacy).map((item) => item.id), [
+    "escape",
+    "backspace",
+    "tab",
+    "space",
+    "enter",
+  ]);
+
+  const custom = ["enter", "space", "tab", "backspace", "escape"].map((id) => ({ id }));
+  assert.equal(normalizeUtilityKeyOrder(custom), custom);
 });

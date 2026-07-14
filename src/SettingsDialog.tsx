@@ -12,6 +12,9 @@ interface SettingsDialogProps {
   updateState: UpdateState;
   onCheckForUpdates: () => void;
   onOpenUpdate: () => void;
+  dockVisibility: { supported: boolean; visible: boolean } | null;
+  dockVisibilityPending: boolean;
+  onDockVisibilityChange: (visible: boolean) => void;
   onClose: () => void;
 }
 
@@ -21,7 +24,7 @@ const themes = [
   { value: "system", label: "system", Icon: Monitor },
 ] as const;
 
-export function SettingsDialog({ theme, onThemeChange, language, onLanguageChange, updateState, onCheckForUpdates, onOpenUpdate, onClose }: SettingsDialogProps) {
+export function SettingsDialog({ theme, onThemeChange, language, onLanguageChange, updateState, onCheckForUpdates, onOpenUpdate, dockVisibility, dockVisibilityPending, onDockVisibilityChange, onClose }: SettingsDialogProps) {
   const [section, setSection] = useState<"general" | "appearance">("general");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -111,6 +114,20 @@ export function SettingsDialog({ theme, onThemeChange, language, onLanguageChang
                   })}
                 </div>
               </div>
+              {dockVisibility?.supported && (
+                <div className="setting-row setting-row-horizontal">
+                  <span className="setting-copy"><strong>{t("showInDock")}</strong><small>{t("showInDockDescription")}</small></span>
+                  <button
+                    className={`setting-switch ${dockVisibility.visible ? "active" : ""}`}
+                    type="button"
+                    role="switch"
+                    aria-checked={dockVisibility.visible}
+                    aria-label={t("showInDock")}
+                    disabled={dockVisibilityPending}
+                    onClick={() => onDockVisibilityChange(!dockVisibility.visible)}
+                  ><i aria-hidden="true" /></button>
+                </div>
+              )}
             </section>
           ) : (
             <section className="settings-content" aria-labelledby="appearance-title">

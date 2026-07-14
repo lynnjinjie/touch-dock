@@ -133,7 +133,7 @@ impl Default for ControlLayout {
                 show_right_click: true,
                 show_modifiers: true,
             },
-            keys: ["escape", "tab", "space", "backspace", "enter"]
+            keys: ["escape", "backspace", "tab", "space", "enter"]
                 .into_iter()
                 .map(|id| KeyConfig {
                     id: id.into(),
@@ -297,7 +297,16 @@ mod tests {
     use super::*;
     #[test]
     fn default_layout_is_valid() {
-        ControlLayout::default().validate().unwrap();
+        let layout = ControlLayout::default();
+        layout.validate().unwrap();
+        assert_eq!(
+            layout
+                .keys
+                .iter()
+                .map(|key| key.id.as_str())
+                .collect::<Vec<_>>(),
+            ["escape", "backspace", "tab", "space", "enter"]
+        );
     }
     #[test]
     fn rejects_unknown_or_duplicate_keys() {

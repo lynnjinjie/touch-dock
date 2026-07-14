@@ -210,11 +210,15 @@ The desktop layout editor uses stable tabs for Trackpad, Keys, and Actions with 
 
 Preset actions use matching product icons and cover approved media controls plus common application commands. Choosing a preset only stages it; the layout changes after the user confirms with the modal's bottom action. The mobile header, browser tab, and iOS home-screen metadata reuse the same TouchDock product icon as the desktop app.
 
+On macOS, General settings may hide TouchDock from the Dock. The menu bar item remains the persistent recovery path for opening the application and settings. Windows omits this control because taskbar presence follows window state rather than a persistent application activation policy.
+
 The mobile Actions view remains a compact two-column grid that preserves the desktop order. Labels are localized by the desktop language setting, while user-authored names remain unchanged.
+
+The mobile Keys view uses familiar keyboard proportions instead of equal utility-key widths: Escape and Delete occupy the upper corners, while Tab, a wide Space key, and Enter form the lower row. Reordering maps keys to these five stable slots, and hiding a key leaves its slot open rather than shifting unrelated keys.
 
 ### Settings And Updates
 
-Settings uses a two-column native preferences layout with General and Appearance sections. General contains app version, update state, manual update checking, and language. Appearance contains Light, Dark, and Follow System. Automatic update checks are silent, occur at startup no more than once every 24 hours, and never interrupt an active remote session.
+Settings uses a two-column native preferences layout with General and Appearance sections. General contains app version, update state, manual update checking, language, and the macOS-only Dock visibility preference. Appearance contains Light, Dark, and Follow System. Automatic update checks are silent, occur at startup no more than once every 24 hours, and never interrupt an active remote session.
 
 ### Connection Recovery
 

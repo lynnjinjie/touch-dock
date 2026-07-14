@@ -264,9 +264,15 @@ h2 { margin-bottom: 5px; font-size: 14px; line-height: 1.3; }
 .preview-dpad .left { grid-area: left; }
 .preview-dpad .down { grid-area: down; }
 .preview-dpad .right { grid-area: right; }
-.preview-key-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; }
+.preview-key-row { display: grid; grid-template: 38px 44px / repeat(12, minmax(0, 1fr)); gap: 4px 2px; }
 .preview-key-row span, .preview-shortcuts > span { display: grid; place-items: center; min-width: 0; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-2); text-align: center; }
-.preview-key-row span { min-height: 48px; }
+.preview-key-slot-0 { grid-area: 1 / 1 / 2 / 3; }
+.preview-key-slot-1 { grid-area: 1 / 10 / 2 / 13; }
+.preview-key-slot-2 { grid-area: 2 / 1 / 3 / 4; }
+.preview-key-slot-3 { grid-area: 2 / 4 / 3 / 10; }
+.preview-key-slot-4 { grid-area: 2 / 10 / 3 / 13; }
+.preview-key-row .preview-space-key { gap: 2px; }
+.preview-space-key i { width: 36px; height: 2px; border-radius: 2px; background: var(--accent); }
 .preview-key-row b, .preview-shortcuts b { font-size: 10px; }
 .preview-key-row small, .preview-shortcuts small { max-width: 100%; overflow: hidden; color: var(--muted); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
 .preview-shortcuts { display: grid; grid-template-columns: repeat(2, 1fr); align-content: start; gap: 6px; }
@@ -299,6 +305,11 @@ h2 { margin-bottom: 5px; font-size: 14px; line-height: 1.3; }
 .settings-page-header h3 { margin: 0; font-size: 14px; }
 .setting-row { display: grid; gap: 8px; }
 .setting-row-horizontal { grid-template-columns: minmax(0, 1fr) 260px; align-items: center; gap: 24px; min-height: 92px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.setting-switch { position: relative; justify-self: end; width: 38px; height: 22px; padding: 0; border: 0; border-radius: 999px; background: var(--line); cursor: default; transition: background 140ms ease-out; }
+.setting-switch i { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px oklch(0.08 0.01 215 / 18%); transition: transform 140ms ease-out; }
+.setting-switch.active { background: var(--accent); }
+.setting-switch.active i { transform: translateX(16px); }
+.setting-switch:disabled { opacity: .55; }
 .setting-copy strong, .setting-copy small { display: block; }
 .setting-copy strong { font-size: 12px; }
 .setting-copy small { max-width: 34ch; margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.45; }

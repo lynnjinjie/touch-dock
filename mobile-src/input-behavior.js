@@ -13,6 +13,15 @@ export function scaleScrollDelta(delta, speed) {
   return Number(delta) * clampPointerSpeed(speed);
 }
 
+const legacyUtilityKeyOrder = ["escape", "tab", "space", "backspace", "enter"];
+const keyboardUtilityKeyOrder = ["escape", "backspace", "tab", "space", "enter"];
+
+export function normalizeUtilityKeyOrder(keys) {
+  const ids = keys.map((item) => item.id);
+  if (ids.join() !== legacyUtilityKeyOrder.join()) return keys;
+  return keyboardUtilityKeyOrder.map((id) => keys.find((item) => item.id === id));
+}
+
 export class HoldState {
   constructor(onDown, onUp) {
     this.onDown = onDown;

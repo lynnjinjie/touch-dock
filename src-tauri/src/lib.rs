@@ -1,12 +1,13 @@
 mod control_layout;
 mod crypto;
+mod dock_visibility;
 mod input;
 mod platform;
 mod protocol;
 mod server;
-mod updates;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod tray;
+mod updates;
 
 use server::{RemoteServer, RemoteServiceInfo};
 use tauri::{Manager, State};
@@ -52,9 +53,15 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let driver = platform::create_input_driver();
-            let config_path = app.path().app_config_dir()?.join("control-layout.json");
+            let app_config_dir = app.path().app_config_dir()?;
+            let config_path = app_config_dir.join("control-layout.json");
             let server = tauri::async_runtime::block_on(RemoteServer::start(driver, config_path))?;
             app.manage(server);
+            let dock_visibility = dock_visibility::DockVisibilityStore::load(
+                app_config_dir.join("dock-visibility.json"),
+            );
+            dock_visibility::apply_saved_preference(app.handle(), &dock_visibility)?;
+            app.manage(dock_visibility);
             #[cfg(any(target_os = "macos", target_os = "windows"))]
             tray::setup(app)?;
             Ok(())
@@ -73,6 +80,8 @@ pub fn run() {
             request_input_permission,
             control_layout,
             set_control_layout,
+            dock_visibility::dock_visibility,
+            dock_visibility::set_dock_visibility,
             latest_release
         ])
         .run(tauri::generate_context!())

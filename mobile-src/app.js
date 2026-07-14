@@ -7,7 +7,7 @@ import {
   hexToBytes,
   randomNonce,
 } from "./crypto.js";
-import { HoldState, TapDetector, clampPointerSpeed, scalePointerDelta, scaleScrollDelta } from "./input-behavior.js";
+import { HoldState, TapDetector, clampPointerSpeed, normalizeUtilityKeyOrder, scalePointerDelta, scaleScrollDelta } from "./input-behavior.js";
 
 const shell = document.querySelector("#remoteShell");
 const connectionText = document.querySelector("#connectionText");
@@ -121,8 +121,8 @@ const copy = {
   },
 };
 const keyPresentation = {
-  en: { escape: ["×", "Esc"], tab: ["⇥", "Tab"], space: ["␣", "Space"], backspace: ["⌫", "Delete"], enter: ["↵", "Enter"] },
-  "zh-CN": { escape: ["×", "Esc"], tab: ["⇥", "Tab"], space: ["␣", "空格"], backspace: ["⌫", "删除"], enter: ["↵", "回车"] },
+  en: { escape: ["esc", "Esc"], tab: ["⇥", "Tab"], space: ["", "Space"], backspace: ["⌫", "Delete"], enter: ["↵", "Enter"] },
+  "zh-CN": { escape: ["esc", "Esc"], tab: ["⇥", "Tab"], space: ["", "空格"], backspace: ["⌫", "删除"], enter: ["↵", "回车"] },
 };
 const actionKeyLabel = { tab: "Tab", space: "Space", enter: "Enter", escape: "Esc", backspace: "Delete", delete: "Delete", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
 const actionKeySymbol = { tab: "⇥", space: "␣", enter: "↵", escape: "×", backspace: "⌫", delete: "⌦", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
@@ -173,13 +173,15 @@ function applyLayout(layout) {
   document.querySelector('[data-click="right"]').hidden = !layout.trackpad.showRightClick;
   document.querySelector("#modifierRow").hidden = !layout.trackpad.showModifiers;
   const utilityKeys = document.querySelector("#utilityKeys");
-  utilityKeys.replaceChildren(...layout.keys.filter((item) => item.visible).map((item) => {
+  utilityKeys.replaceChildren(...normalizeUtilityKeyOrder(layout.keys).map((item, slot) => {
+    if (!item.visible) return null;
     const [symbol, label] = keyPresentation[language][item.id];
     const button = document.createElement("button");
-    button.className = "utility-key"; button.type = "button"; button.dataset.key = item.id;
-    button.innerHTML = `<span aria-hidden="true">${symbol}</span><small>${label}</small>`;
+    button.className = `utility-key utility-slot-${slot}${item.id === "space" ? " utility-key-space" : ""}`; button.type = "button"; button.dataset.key = item.id;
+    button.setAttribute("aria-label", label);
+    button.innerHTML = item.id === "space" ? `<i class="space-bar" aria-hidden="true"></i><small>${label}</small>` : `<span aria-hidden="true">${symbol}</span>${item.id === "escape" ? "" : `<small>${label}</small>`}`;
     return button;
-  }));
+  }).filter(Boolean));
   const actions = document.querySelector("#shortcutsPanel");
   actions.replaceChildren(...layout.actions.filter((item) => item.visible && (item.command.kind !== "system" || supportedSystemActions.has(item.command.action))).map((item) => {
     const [symbol, detail] = actionPresentation(item.command);

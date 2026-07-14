@@ -3,7 +3,15 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
-## Unreleased
+## [v0.2.4](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.4) - 2026-07-14
+
+### Features
+
+- add a macOS-only setting to show or hide TouchDock in the Dock while keeping menu bar access available
+
+### Styles
+
+- reshape mobile utility keys into keyboard-like rows with a wide Space key and stable Escape, Delete, Tab, and Enter slots
 
 ## [v0.2.3](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.3) - 2026-07-14
 
