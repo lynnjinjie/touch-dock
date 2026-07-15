@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
+## Unreleased
+
+### Bug Fixes
+
+- show a clear connected state in the tray pairing panel instead of a misleading QR preparation message after the single-use token is consumed
+
 ## [v0.2.9](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.9) - 2026-07-15
 
 ### Build

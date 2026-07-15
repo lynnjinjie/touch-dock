@@ -53,6 +53,7 @@ export function TrayPanel() {
     : !info?.lanAvailable
       ? (zh ? "局域网不可用" : "Local network unavailable")
       : (zh ? "扫描二维码连接" : "Scan to connect");
+  const connected = info?.sessionActive ?? false;
   const expiry = useMemo(() => {
     if (!info || info.sessionActive) return "";
     const seconds = Math.ceil(Math.max(0, info.pairingExpiresAtUnixMs - now) / 1_000);
@@ -74,7 +75,13 @@ export function TrayPanel() {
   return <main className="tray-panel-shell">
     <header className="tray-panel-header"><span><strong>TouchDock</strong><small>{status}</small></span></header>
     <section className="tray-qr-area">
-      <div className="tray-qr">{info?.pairingQrSvg ? <div dangerouslySetInnerHTML={{ __html: info.pairingQrSvg }} /> : <span>{zh ? "正在准备二维码…" : "Preparing QR code…"}</span>}</div>
+      <div className={`tray-qr${connected ? " is-connected" : ""}`}>
+        {connected
+          ? <div className="tray-connected-state" role="status"><span aria-hidden="true" /><strong>{zh ? "连接已建立" : "Connected"}</strong><small>{zh ? "手机断开后会生成新的二维码" : "A new QR code appears after disconnecting"}</small></div>
+          : info?.pairingQrSvg
+            ? <div className="tray-qr-svg" dangerouslySetInnerHTML={{ __html: info.pairingQrSvg }} />
+            : <span>{info && !info.lanAvailable ? (zh ? "局域网不可用" : "Local network unavailable") : (zh ? "正在准备二维码…" : "Preparing QR code…")}</span>}
+      </div>
       <small>{expiry}</small>
     </section>
     <p className="tray-network-note"><Wifi aria-hidden="true" size={14} /><span>{zh ? "手机和电脑需连接同一 Wi‑Fi" : "Phone and computer must use the same Wi-Fi"}</span></p>

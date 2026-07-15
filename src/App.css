@@ -61,8 +61,13 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .tray-panel-footer button:hover { background: var(--surface-2); color: var(--ink); }
 .tray-qr-area { display: grid; align-content: center; justify-items: center; gap: 8px; min-height: 0; }
 .tray-qr { display: grid; place-items: center; width: 216px; height: 216px; padding: 15px; border-radius: 10px; background: white; color: #314145; box-shadow: 0 2px 8px rgb(15 33 37 / 12%); }
-.tray-qr > div, .tray-qr svg { display: block; width: 100%; height: 100%; }
+.tray-qr-svg, .tray-qr svg { display: block; width: 100%; height: 100%; }
 .tray-qr > span { color: #526164; font-size: 10px; }
+.tray-qr.is-connected { border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); box-shadow: none; }
+.tray-connected-state { display: grid; justify-items: center; gap: 6px; max-width: 150px; text-align: center; }
+.tray-connected-state > span { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 14%, transparent); }
+.tray-connected-state strong { margin-top: 4px; font-size: 12px; }
+.tray-connected-state small { color: var(--muted); font-size: 9px; line-height: 1.4; }
 .tray-qr-area > small { min-height: 15px; color: var(--muted); font-size: 9px; font-variant-numeric: tabular-nums; }
 .tray-network-note { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 30px; margin: 0 0 7px; padding: 6px 8px; border-radius: 6px; background: var(--surface-2); color: var(--muted); font-size: 10px; line-height: 1.25; text-align: center; }
 .tray-network-note svg { flex: 0 0 auto; color: var(--accent); }
