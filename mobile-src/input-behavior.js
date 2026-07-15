@@ -13,6 +13,28 @@ export function scaleScrollDelta(delta, speed) {
   return Number(delta) * clampPointerSpeed(speed);
 }
 
+const defaultScrollZoneRatio = 0.22;
+const minimumScrollZoneWidth = 52;
+const maximumScrollZoneRatio = 0.45;
+
+export function clampScrollZoneWidth(value, trackpadWidth) {
+  const availableWidth = Number(trackpadWidth);
+  if (!Number.isFinite(availableWidth) || availableWidth <= 0) return minimumScrollZoneWidth;
+  const desiredWidth = Number(value);
+  const fallbackWidth = availableWidth * defaultScrollZoneRatio;
+  const maximumWidth = Math.max(minimumScrollZoneWidth, availableWidth * maximumScrollZoneRatio);
+  return Math.max(
+    minimumScrollZoneWidth,
+    Math.min(maximumWidth, Number.isFinite(desiredWidth) ? desiredWidth : fallbackWidth),
+  );
+}
+
+export function scrollZoneRatio(width, trackpadWidth) {
+  const availableWidth = Number(trackpadWidth);
+  if (!Number.isFinite(availableWidth) || availableWidth <= 0) return defaultScrollZoneRatio;
+  return clampScrollZoneWidth(width, availableWidth) / availableWidth;
+}
+
 const legacyUtilityKeyOrder = ["escape", "tab", "space", "backspace", "enter"];
 const keyboardUtilityKeyOrder = ["escape", "backspace", "tab", "space", "enter"];
 

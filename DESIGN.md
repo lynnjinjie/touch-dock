@@ -200,7 +200,9 @@ The desktop Settings button sits in the service footer. A small Signal Teal dot 
 
 ### Trackpad
 
-The trackpad is the largest mobile region. It uses a low-contrast measurement dot field because it is an actual input canvas, a visible pointer-feedback ring, and a separate scroll region. The scroll indicator stays centered within its fixed visible region. Pointer and scroll speed are configured on the desktop and persisted with the controller layout. Optional left click, right click, and modifier rows can be hidden. The phone consumes this configuration without depending on Tauri APIs.
+The trackpad is the largest mobile region. It uses a low-contrast measurement dot field because it is an actual input canvas, a visible pointer-feedback ring, and a separate scroll region. A centered vertical divider lets the phone user resize the pointer and scroll regions between a 52px minimum and 45% of the trackpad; the ratio persists locally and adapts across orientation changes. The scroll indicator remains centered inside the resulting scroll region. Pointer and scroll speed are configured on the desktop and persisted with the controller layout. Optional left click, right click, and modifier rows can be hidden. The phone consumes this configuration without depending on Tauri APIs.
+
+Mobile layout is orientation-aware rather than uniformly scaled. Portrait phones and tablets keep a single task column and give all remaining height to the active control panel. Landscape devices use a compact vertical tab rail: Trackpad places pointer movement on the left with clicks and modifiers on the right, Keys separates navigation from the keyboard-shaped utility row, and Actions reflows into a denser grid. Tablet portrait is width-limited for comfortable reach, while tablet landscape caps the overall shell so controls do not stretch across the full display. All variants account for safe-area insets, dynamic browser height, 44px touch targets, and internal scrolling without page overflow.
 
 Short taps produce native clicks, two taps produce a native double click, and holding a click or key control sends one `down` until release sends `up`. iOS text selection, touch callouts, and double-tap page zoom stay disabled on direct-manipulation controls.
 
@@ -212,7 +214,7 @@ Preset actions use matching product icons and cover approved media controls plus
 
 On macOS, General settings may hide TouchDock from the Dock. The menu bar item remains the persistent recovery path for opening the application and settings. Windows omits this control because taskbar presence follows window state rather than a persistent application activation policy.
 
-The menu-bar and system-tray item opens a compact 280px pairing panel rather than a text-only native menu. It presents a full-size scannable QR code, expiry or connection state, address copy, pairing refresh, and secondary app/settings/quit controls. The panel appears below the macOS menu-bar icon and above the Windows system tray, closes on focus loss or Escape, and always follows the desktop Light, Dark, or System theme preference.
+The menu-bar and system-tray item opens a compact 280px pairing panel rather than a text-only native menu. It presents a full-size scannable QR code, expiry or connection state, a quiet reminder that both devices must use the same Wi-Fi, address copy, pairing refresh, and secondary app/settings/quit controls. The panel appears below the macOS menu-bar icon and above the Windows system tray, closes on focus loss or Escape, and always follows the desktop Light, Dark, or System theme preference.
 
 The mobile Actions view remains a compact two-column grid that preserves the desktop order. Labels are localized by the desktop language setting, while user-authored names remain unchanged.
 

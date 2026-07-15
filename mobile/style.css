@@ -17,11 +17,12 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { min-width: 320px; min-height: 100%; }
+html, body { width: 100%; min-width: 0; min-height: 100%; }
 
 body {
   margin: 0;
   min-height: 100svh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--page);
   color: var(--ink);
@@ -51,10 +52,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(100%, 720px);
-  height: 100svh;
+  width: min(100%, 840px);
+  height: 100dvh;
+  min-height: 100svh;
   margin: 0 auto;
-  padding: max(12px, env(safe-area-inset-top)) 14px max(10px, env(safe-area-inset-bottom));
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(14px, env(safe-area-inset-right))
+    max(10px, env(safe-area-inset-bottom))
+    max(14px, env(safe-area-inset-left));
 }
 
 .app-header { display: flex; align-items: center; min-height: 48px; gap: 10px; }
@@ -92,6 +98,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .trackpad-center { position: absolute; inset: 0 var(--scroll-zone-width) 0 0; display: grid; place-content: center; justify-items: center; gap: 10px; color: var(--muted); font-size: .75rem; pointer-events: none; }
 .trackpad-center i { width: 22px; height: 22px; border: 2px solid var(--accent); border-radius: 50%; box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 14%, transparent); }
 .trackpad.active .trackpad-center i { transform: scale(1.18); }
+.scroll-divider { position: absolute; z-index: 2; top: 0; right: calc(var(--scroll-zone-width) - 14px); bottom: 0; width: 28px; min-height: 44px; padding: 0; border: 0; background: transparent; cursor: col-resize; touch-action: none; }
+.scroll-divider span { position: absolute; top: 50%; left: 50%; width: 4px; height: 42px; border-radius: 4px; background: color-mix(in srgb, var(--accent) 48%, var(--surface)); transform: translate(-50%, -50%); }
+.scroll-divider.is-dragging span, .scroll-divider:focus-visible span { background: var(--accent); }
 .scroll-zone { position: absolute; top: 12px; right: 0; bottom: 12px; width: var(--scroll-zone-width); border-left: 1px solid var(--line); touch-action: none; }
 .scroll-zone i { position: absolute; top: calc(50% - 24px); left: calc(50% - .5px); width: 4px; height: 48px; border-radius: 4px; background: var(--accent); transform: translateX(-50%); }
 .speed-control { display: grid; grid-template-columns: auto minmax(90px, 1fr) 38px; align-items: center; gap: 10px; min-height: 44px; padding: 0 4px; }
@@ -116,15 +125,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .key-left { grid-area: 2 / 1; }
 .key-down { grid-area: 2 / 2; }
 .key-right { grid-area: 2 / 3; }
-.utility-keys { display: grid; grid-template: 58px 64px / repeat(12, minmax(0, 1fr)); gap: 8px 4px; }
+.utility-keys { display: grid; grid-template: 58px 64px / repeat(8, minmax(0, 1fr)); gap: 8px 4px; }
 .utility-key { display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; padding: 0 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-raised); box-shadow: 0 2px 0 var(--line); font-weight: 700; }
 .utility-key span { font-size: 1.25rem; line-height: 1; }
 .utility-key small { overflow: hidden; color: var(--muted); font-size: .5625rem; text-overflow: ellipsis; }
 .utility-slot-0 { grid-area: 1 / 1 / 2 / 3; }
-.utility-slot-1 { grid-area: 1 / 10 / 2 / 13; }
-.utility-slot-2 { grid-area: 2 / 1 / 3 / 4; }
-.utility-slot-3 { grid-area: 2 / 4 / 3 / 10; }
-.utility-slot-4 { grid-area: 2 / 10 / 3 / 13; }
+.utility-slot-1 { grid-area: 1 / 6 / 2 / 9; }
+.utility-slot-2 { grid-area: 2 / 1 / 3 / 3; }
+.utility-slot-3 { grid-area: 2 / 3 / 3 / 7; }
+.utility-slot-4 { grid-area: 2 / 7 / 3 / 9; }
 .utility-key-space { flex-direction: column; gap: 3px; }
 .space-bar { width: min(56px, 55%); height: 3px; border-radius: 3px; background: var(--accent); }
 
@@ -140,17 +149,130 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .secure-state span { color: var(--accent); font-size: .5rem; }
 button:active { transform: translateY(1px); }
 
-@media (min-width: 600px) {
-  .remote-shell { padding-inline: 22px; }
-  .trackpad { min-height: 300px; }
+@media (min-width: 600px) and (orientation: portrait) {
+  .remote-shell {
+    gap: 16px;
+    padding:
+      max(20px, env(safe-area-inset-top))
+      max(24px, env(safe-area-inset-right))
+      max(18px, env(safe-area-inset-bottom))
+      max(24px, env(safe-area-inset-left));
+  }
+  .trackpad { min-height: 360px; }
+  .shortcuts-panel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .shortcut { min-height: 82px; }
 }
 
-@media (max-height: 620px) {
+@media (orientation: landscape) {
+  .remote-shell {
+    position: relative;
+    display: grid;
+    grid-template:
+      "header header" auto
+      "tabs content" minmax(0, 1fr)
+      "footer footer" auto
+      / clamp(104px, 16vw, 152px) minmax(0, 1fr);
+    gap: 8px 12px;
+    width: min(100%, 1180px);
+    padding:
+      max(8px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(6px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
+  .app-header { grid-area: header; min-height: 38px; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 8px; }
+  .notice {
+    position: absolute;
+    z-index: 5;
+    top: max(54px, calc(env(safe-area-inset-top) + 46px));
+    right: max(12px, env(safe-area-inset-right));
+    left: calc(max(12px, env(safe-area-inset-left)) + clamp(104px, 16vw, 152px) + 12px);
+    box-shadow: 0 2px 8px rgb(17 32 35 / 12%);
+  }
+  .tabs {
+    grid-area: tabs;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, 44px);
+    align-self: start;
+  }
+  .panel.active { grid-area: content; width: 100%; height: 100%; }
+  .secure-state { grid-area: footer; }
+
+  .trackpad-panel {
+    grid-template:
+      "trackpad ." minmax(0, 1fr)
+      "trackpad clicks" auto
+      "trackpad modifiers" auto
+      / minmax(0, 1fr) clamp(132px, 22vw, 190px);
+    gap: 8px 10px;
+  }
+  .trackpad { grid-area: trackpad; min-height: 0; }
+  .click-row {
+    grid-area: clicks;
+    grid-template-columns: 1fr;
+    align-self: start;
+    align-content: start;
+  }
+  .click-button { min-height: 48px; }
+  .modifier-row {
+    grid-area: modifiers;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .keys-panel {
+    grid-template:
+      "input utility" 48px
+      "directions utility" minmax(0, 1fr)
+      / minmax(208px, 1fr) minmax(190px, .85fr);
+    gap: 10px 14px;
+    overflow: hidden;
+  }
+  .text-entry { grid-area: input; }
+  .direction-pad {
+    grid-area: directions;
+    grid-template: repeat(2, minmax(52px, 1fr)) / repeat(3, minmax(58px, 92px));
+    min-height: 0;
+  }
+  .key { min-width: 58px; }
+  .utility-keys {
+    grid-area: utility;
+    align-self: center;
+    width: 100%;
+  }
+
+  .shortcuts-panel {
+    grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
+    align-content: start;
+    padding-right: 2px;
+  }
+  .shortcut { min-height: 66px; }
+}
+
+@media (orientation: portrait) and (max-height: 620px) {
   .remote-shell { gap: 8px; }
   .app-header { min-height: 40px; }
   .trackpad { min-height: 160px; }
   .direction-pad { grid-template-rows: repeat(2, minmax(60px, 1fr)); }
   .utility-keys { grid-template-rows: 52px 56px; }
+  .secure-state { display: none; }
+}
+
+@media (orientation: landscape) and (max-height: 420px) {
+  .remote-shell { gap: 6px 10px; }
+  .app-header { min-height: 32px; }
+  .brand-mark { width: 30px; height: 30px; border-radius: 7px; }
+  .brand-copy span { display: none; }
+  .notice { top: max(46px, calc(env(safe-area-inset-top) + 38px)); }
+  .tabs { grid-template-rows: repeat(3, 44px); }
+  .tab { min-height: 44px; }
+  .trackpad-panel { grid-template-columns: minmax(0, 1fr) clamp(124px, 22vw, 168px); }
+  .click-row { gap: 6px; }
+  .click-button { min-height: 44px; }
+  .modifier-row { gap: 6px; }
+  .modifier-row button { min-height: 44px; }
+  .utility-keys { grid-template-rows: 48px 52px; gap: 6px 4px; }
+  .shortcut { min-height: 60px; padding-block: 7px; }
   .secure-state { display: none; }
 }
 

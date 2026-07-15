@@ -1,5 +1,9 @@
 # TouchDock
 
+<p align="center">
+  <img src="src-tauri/icons/128x128.png" width="112" height="112" alt="TouchDock app icon">
+</p>
+
 TouchDock turns a phone browser on the same local network into a trackpad and keyboard for a computer. The desktop application handles secure pairing, connection state, and operating-system input control. The phone opens the controller by scanning a QR code and requires no mobile app installation.
 
 > The repository includes a Rust LAN service, real QR pairing, a production mobile controller, short-lived single-use pairing tokens, encrypted session recovery, P-256 and AES-GCM application-layer encryption, and macOS and Windows input drivers. The React desktop UI reflects live native service state, provides persistent controller configuration, and ships through cross-platform CI and tagged GitHub Releases. Production signing credentials are still required for trusted public distribution.
@@ -8,11 +12,12 @@ TouchDock turns a phone browser on the same local network into a trackpad and ke
 
 - Single-use QR pairing over the local network
 - Encrypted `Reconnect` after lock screen, browser suspension, or temporary network loss without another scan
-- Trackpad movement, configurable pointer and scroll speed, left and right click, double click, hold, and scrolling
+- Trackpad movement, configurable pointer and scroll speed, resizable pointer/scroll regions, left and right click, double click, hold, and scrolling
+- Responsive phone and tablet layouts for compact portrait, phone landscape, and iPad portrait or landscape use
 - Text entry, independently held modifier keys, arrow keys, configurable utility keys, and common shortcuts
 - Persistent desktop control-layout editor with reordering, visibility controls, custom single keys, multi-modifier shortcuts, confirmed presets, and native media controls
 - English and Simplified Chinese interfaces with light, dark, and system themes
-- macOS menu-bar and Windows system-tray QR popover with live pairing status, address copy, code refresh, app access, and Settings
+- macOS menu-bar and Windows system-tray QR popover with live pairing status, same-Wi-Fi guidance, address copy, code refresh, app access, and Settings
 - Startup update checks with 24-hour throttling, manual checks, and an update badge
 - Explicit connecting, active, interrupted, failed, and disconnected states
 - Platform input drivers for macOS and Windows
@@ -124,8 +129,8 @@ GitHub Actions runs the frontend build, mobile controller tests, and Rust tests 
 To publish a release, update the version in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, commit the change, then push a matching version tag:
 
 ```bash
-git tag v0.2.5
-git push origin v0.2.5
+git tag v0.2.6
+git push origin v0.2.6
 ```
 
 The release workflow builds TouchDock for Apple Silicon macOS and Windows, then creates a GitHub Release and uploads the installers. Release notes are generated from Conventional Commit subjects, grouped by change type, linked to each commit, and finished with a full comparison link. The workflow can also be run manually with an existing tag to rebuild only its Apple Silicon artifact. The macOS artifact currently uses an ad-hoc signature so the complete app bundle remains internally valid without unavailable Apple certificates. Users must still allow the app in macOS Privacy & Security after downloading it. Trusted public distribution should configure valid Developer ID and notarization credentials described by the Tauri signing documentation.

@@ -5,7 +5,9 @@ import {
   HoldState,
   TapDetector,
   clampPointerSpeed,
+  clampScrollZoneWidth,
   normalizeUtilityKeyOrder,
+  scrollZoneRatio,
   scalePointerDelta,
   scaleScrollDelta,
 } from "./input-behavior.js";
@@ -45,6 +47,18 @@ test("scroll speed is bounded and scales the travelled distance", () => {
   assert.equal(scaleScrollDelta(10, 0.1), 5);
   assert.equal(scaleScrollDelta(10, 1.5), 15);
   assert.equal(scaleScrollDelta(10, 4), 30);
+});
+
+test("scroll zone width stays usable without consuming the trackpad", () => {
+  assert.equal(clampScrollZoneWidth(20, 320), 52);
+  assert.equal(clampScrollZoneWidth(180, 320), 144);
+  assert.equal(clampScrollZoneWidth(96, 320), 96);
+  assert.equal(clampScrollZoneWidth(Number.NaN, 320), 70.4);
+});
+
+test("scroll zone ratio survives responsive trackpad sizes", () => {
+  assert.equal(scrollZoneRatio(96, 320), 0.3);
+  assert.equal(scrollZoneRatio(52, 0), 0.22);
 });
 
 test("legacy utility keys migrate to keyboard slots without changing custom orders", () => {

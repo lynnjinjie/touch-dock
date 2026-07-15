@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { Copy, ExternalLink, Power, RefreshCw, Settings, X } from "lucide-react";
+import { Copy, ExternalLink, Power, RefreshCw, Settings, Wifi } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { readLanguagePreference } from "./i18n";
 import { applyTheme, readThemePreference, watchSystemTheme } from "./theme";
@@ -72,11 +72,12 @@ export function TrayPanel() {
   }
 
   return <main className="tray-panel-shell">
-    <header className="tray-panel-header"><span><strong>TouchDock</strong><small>{status}</small></span><button type="button" aria-label={zh ? "关闭" : "Close"} onClick={() => void invoke("close_tray_panel")}><X size={15} /></button></header>
+    <header className="tray-panel-header"><span><strong>TouchDock</strong><small>{status}</small></span></header>
     <section className="tray-qr-area">
       <div className="tray-qr">{info?.pairingQrSvg ? <div dangerouslySetInnerHTML={{ __html: info.pairingQrSvg }} /> : <span>{zh ? "正在准备二维码…" : "Preparing QR code…"}</span>}</div>
       <small>{expiry}</small>
     </section>
+    <p className="tray-network-note"><Wifi aria-hidden="true" size={14} /><span>{zh ? "手机和电脑需连接同一 Wi‑Fi" : "Phone and computer must use the same Wi-Fi"}</span></p>
     <div className="tray-panel-actions">
       <button type="button" disabled={!info?.pairingUrl} onClick={() => void copyAddress()}><Copy size={14} /><span>{copied ? (zh ? "已复制" : "Copied") : (zh ? "复制地址" : "Copy address")}</span></button>
       <button type="button" disabled={refreshing || info?.sessionActive || !info?.lanAvailable} onClick={() => void refreshCode()}><RefreshCw size={14} /><span>{refreshing ? (zh ? "刷新中…" : "Refreshing…") : (zh ? "刷新二维码" : "Refresh code")}</span></button>

@@ -7,7 +7,7 @@ import {
   hexToBytes,
   randomNonce,
 } from "./crypto.js";
-import { HoldState, TapDetector, clampPointerSpeed, normalizeUtilityKeyOrder, scalePointerDelta, scaleScrollDelta } from "./input-behavior.js";
+import { HoldState, TapDetector, clampPointerSpeed, clampScrollZoneWidth, normalizeUtilityKeyOrder, scalePointerDelta, scaleScrollDelta, scrollZoneRatio } from "./input-behavior.js";
 
 const shell = document.querySelector("#remoteShell");
 const connectionText = document.querySelector("#connectionText");
@@ -17,6 +17,7 @@ const noticeBody = document.querySelector("#noticeBody");
 const retryButton = document.querySelector("#retryButton");
 const trackpad = document.querySelector("#trackpad");
 const scrollZone = document.querySelector("#scrollZone");
+const scrollDivider = document.querySelector("#scrollDivider");
 const textInput = document.querySelector("#textInput");
 
 let socket;
@@ -28,7 +29,34 @@ let keepAlive;
 let intentionalClose = false;
 let pointerSpeed = 1;
 let scrollSpeed = 1.3;
+let currentScrollZoneRatio = 0.22;
 let currentLanguage = "en";
+
+try {
+  const storedRatio = Number(localStorage.getItem("touchdock.scrollZoneRatio"));
+  if (Number.isFinite(storedRatio)) currentScrollZoneRatio = Math.max(0.14, Math.min(0.45, storedRatio));
+} catch {
+  // The default ratio remains available when storage is unavailable.
+}
+
+function applyScrollZoneWidth(width) {
+  const trackpadWidth = trackpad.getBoundingClientRect().width;
+  if (trackpadWidth <= 0) return;
+  const nextWidth = clampScrollZoneWidth(width ?? trackpadWidth * currentScrollZoneRatio, trackpadWidth);
+  currentScrollZoneRatio = scrollZoneRatio(nextWidth, trackpadWidth);
+  trackpad.style.setProperty("--scroll-zone-width", `${nextWidth}px`);
+  const currentPercent = Math.round(currentScrollZoneRatio * 100);
+  scrollDivider.setAttribute("aria-valuemin", String(Math.round((52 / trackpadWidth) * 100)));
+  scrollDivider.setAttribute("aria-valuenow", String(currentPercent));
+}
+
+function saveScrollZoneRatio() {
+  try {
+    localStorage.setItem("touchdock.scrollZoneRatio", String(currentScrollZoneRatio));
+  } catch {
+    // The in-memory ratio remains active when storage is unavailable.
+  }
+}
 
 function setState(state, label) {
   shell.dataset.state = state;
@@ -164,6 +192,9 @@ function applyLayout(layout) {
   document.querySelector(".tabs").setAttribute("aria-label", language === "zh-CN" ? "遥控器控制区" : "Remote controls");
   trackpad.setAttribute("aria-label", language === "zh-CN" ? "触控板区域" : "Trackpad area");
   scrollZone.setAttribute("aria-label", language === "zh-CN" ? "垂直滚动区域" : "Vertical scroll area");
+  const resizeScrollAreaLabel = language === "zh-CN" ? "调节滚动区域宽度" : "Resize scroll area";
+  scrollDivider.setAttribute("aria-label", resizeScrollAreaLabel);
+  scrollDivider.title = language === "zh-CN" ? "拖动以调节滚动区域宽度" : "Drag to resize scroll area";
   document.querySelector(".direction-pad").setAttribute("aria-label", language === "zh-CN" ? "方向键" : "Arrow keys");
   document.querySelector("#modifierRow").setAttribute("aria-label", language === "zh-CN" ? "修饰键" : "Modifier keys");
   document.querySelector(".secure-state").lastChild.textContent = ` ${text.encrypted}`;
@@ -328,6 +359,64 @@ let pointerState;
 let pendingMove = { dx: 0, dy: 0 };
 let moveFrame;
 const tapDetector = new TapDetector();
+let dividerPointerId;
+
+function resizeScrollZoneFromPointer(clientX) {
+  const rect = trackpad.getBoundingClientRect();
+  if (rect.width <= 0) return;
+  applyScrollZoneWidth(rect.right - clientX);
+}
+
+function finishScrollDivider(event) {
+  if (dividerPointerId === undefined || event.pointerId !== dividerPointerId) return;
+  dividerPointerId = undefined;
+  scrollDivider.classList.remove("is-dragging");
+  saveScrollZoneRatio();
+}
+
+scrollDivider.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0) return;
+  event.preventDefault();
+  event.stopPropagation();
+  dividerPointerId = event.pointerId;
+  scrollDivider.setPointerCapture(event.pointerId);
+  scrollDivider.classList.add("is-dragging");
+  resizeScrollZoneFromPointer(event.clientX);
+});
+scrollDivider.addEventListener("pointermove", (event) => {
+  if (event.pointerId !== dividerPointerId) return;
+  event.preventDefault();
+  event.stopPropagation();
+  resizeScrollZoneFromPointer(event.clientX);
+});
+scrollDivider.addEventListener("pointerup", finishScrollDivider);
+scrollDivider.addEventListener("pointercancel", finishScrollDivider);
+scrollDivider.addEventListener("lostpointercapture", finishScrollDivider);
+scrollDivider.addEventListener("keydown", (event) => {
+  const trackpadWidth = trackpad.getBoundingClientRect().width;
+  if (trackpadWidth <= 0) return;
+  const currentWidth = trackpadWidth * currentScrollZoneRatio;
+  const nextWidth = event.key === "ArrowLeft"
+    ? currentWidth + 8
+    : event.key === "ArrowRight"
+      ? currentWidth - 8
+      : event.key === "Home"
+        ? 52
+        : event.key === "End"
+          ? trackpadWidth * 0.45
+          : null;
+  if (nextWidth === null) return;
+  event.preventDefault();
+  applyScrollZoneWidth(nextWidth);
+  saveScrollZoneRatio();
+});
+
+if ("ResizeObserver" in window) {
+  new ResizeObserver(() => applyScrollZoneWidth()).observe(trackpad);
+} else {
+  window.addEventListener("resize", () => applyScrollZoneWidth());
+}
+requestAnimationFrame(() => applyScrollZoneWidth());
 
 function flushMove() {
   moveFrame = undefined;

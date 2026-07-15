@@ -3,6 +3,23 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
+## [v0.2.6](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.6) - 2026-07-15
+
+### Features
+
+- adapt the mobile controller across compact phones, landscape orientation, and iPad-sized screens
+- add a persistent divider for resizing the mobile pointer and scroll regions
+- add same-Wi-Fi guidance to the menu-bar and system-tray pairing panel
+
+### Bug Fixes
+
+- keep the active macOS window visible when hiding TouchDock from the Dock
+
+### Styles
+
+- center the pairing-panel heading, improve QR spacing, and remove the redundant close button
+- add the TouchDock product icon to the README
+
 ## [v0.2.5](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.5) - 2026-07-15
 
 ### Features
