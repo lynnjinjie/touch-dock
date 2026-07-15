@@ -143,16 +143,33 @@ jobs:
           fi
           echo "Developer ID credentials passed preflight validation; signing and notarization are enabled."
 
-      - name: Build and publish Tauri bundles
+      - name: Build and publish ad-hoc or Windows bundles
+        if: matrix.target != 'macos' || vars.ENABLE_APPLE_SIGNING != 'true'
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_CERTIFICATE || '' }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-          APPLE_SIGNING_IDENTITY: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_SIGNING_IDENTITY || '' }}
-          APPLE_ID: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_ID || '' }}
-          APPLE_PASSWORD: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_TEAM_ID || '' }}
+        with:
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseName: TouchDock ${{ env.RELEASE_TAG }}
+          releaseBody: ${{ steps.release_notes.outputs.body }}
+          generateReleaseNotes: false
+          releaseDraft: false
+          prerelease: false
+          uploadUpdaterJson: false
+          releaseAssetNamePattern: TouchDock_[version]_[platform]_[arch].[ext]
+          args: ${{ matrix.args }}
+
+      - name: Build and publish Developer ID macOS bundle
+        if: matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true'
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ env.RELEASE_TAG }}
           releaseName: TouchDock ${{ env.RELEASE_TAG }}

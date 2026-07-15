@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
+## [v0.2.9](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.9) - 2026-07-15
+
+### Build
+
+- isolate ad-hoc packaging from every Apple signing environment variable so Tauri does not try to import an empty certificate
+
 ## [v0.2.8](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.8) - 2026-07-15
 
 ### Build
