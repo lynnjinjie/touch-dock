@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf, sync::Mutex};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -51,13 +51,31 @@ impl DockVisibilityStore {
 
 #[cfg(target_os = "macos")]
 fn apply(app: &AppHandle, visible: bool) -> Result<(), String> {
+    let main_window = app.get_webview_window("main");
+    let restore_main_window = main_window
+        .as_ref()
+        .and_then(|window| window.is_visible().ok())
+        .unwrap_or(false);
     let policy = if visible {
         tauri::ActivationPolicy::Regular
     } else {
         tauri::ActivationPolicy::Accessory
     };
     app.set_activation_policy(policy)
-        .map_err(|error| error.to_string())
+        .map_err(|error| error.to_string())?;
+
+    // Changing the activation policy can cause macOS to order the current
+    // window out. Preserve the user's visible window while removing or adding
+    // the Dock icon; startup preferences still leave hidden windows hidden.
+    if restore_main_window {
+        if let Some(window) = main_window {
+            window.unminimize().map_err(|error| error.to_string())?;
+            window.show().map_err(|error| error.to_string())?;
+            window.set_focus().map_err(|error| error.to_string())?;
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(not(target_os = "macos"))]
