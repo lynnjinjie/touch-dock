@@ -75,6 +75,8 @@ pub enum Key {
     X,
     Y,
     Z,
+    LeftBracket,
+    RightBracket,
     Mute,
 }
 
@@ -213,6 +215,8 @@ fn allowed_shortcut(modifiers: &HashSet<Modifier>, key: Key) -> bool {
             | Key::X
             | Key::Y
             | Key::Z
+            | Key::LeftBracket
+            | Key::RightBracket
             | Key::Tab
             | Key::Space
             | Key::Enter
@@ -360,6 +364,14 @@ mod tests {
         }
         .validate()
         .is_ok());
+        for key in [Key::LeftBracket, Key::RightBracket] {
+            assert!(InputCommand::Shortcut {
+                modifiers: vec![Modifier::Meta],
+                key,
+            }
+            .validate()
+            .is_ok());
+        }
     }
 
     #[test]

@@ -12,7 +12,7 @@ TouchDock turns a phone browser on the same local network into a trackpad and ke
 - Text entry, independently held modifier keys, arrow keys, configurable utility keys, and common shortcuts
 - Persistent desktop control-layout editor with reordering, visibility controls, custom single keys, multi-modifier shortcuts, confirmed presets, and native media controls
 - English and Simplified Chinese interfaces with light, dark, and system themes
-- macOS menu-bar and Windows system-tray access for opening TouchDock and Settings
+- macOS menu-bar and Windows system-tray QR popover with live pairing status, address copy, code refresh, app access, and Settings
 - Startup update checks with 24-hour throttling, manual checks, and an update badge
 - Explicit connecting, active, interrupted, failed, and disconnected states
 - Platform input drivers for macOS and Windows
@@ -124,8 +124,8 @@ GitHub Actions runs the frontend build, mobile controller tests, and Rust tests 
 To publish a release, update the version in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, commit the change, then push a matching version tag:
 
 ```bash
-git tag v0.2.3
-git push origin v0.2.3
+git tag v0.2.5
+git push origin v0.2.5
 ```
 
 The release workflow builds TouchDock for Apple Silicon macOS and Windows, then creates a GitHub Release and uploads the installers. Release notes are generated from Conventional Commit subjects, grouped by change type, linked to each commit, and finished with a full comparison link. The workflow can also be run manually with an existing tag to rebuild only its Apple Silicon artifact. The macOS artifact currently uses an ad-hoc signature so the complete app bundle remains internally valid without unavailable Apple certificates. Users must still allow the app in macOS Privacy & Security after downloading it. Trusted public distribution should configure valid Developer ID and notarization credentials described by the Tauri signing documentation.

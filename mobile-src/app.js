@@ -124,8 +124,8 @@ const keyPresentation = {
   en: { escape: ["esc", "Esc"], tab: ["⇥", "Tab"], space: ["", "Space"], backspace: ["⌫", "Delete"], enter: ["↵", "Enter"] },
   "zh-CN": { escape: ["esc", "Esc"], tab: ["⇥", "Tab"], space: ["", "空格"], backspace: ["⌫", "删除"], enter: ["↵", "回车"] },
 };
-const actionKeyLabel = { tab: "Tab", space: "Space", enter: "Enter", escape: "Esc", backspace: "Delete", delete: "Delete", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
-const actionKeySymbol = { tab: "⇥", space: "␣", enter: "↵", escape: "×", backspace: "⌫", delete: "⌦", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
+const actionKeyLabel = { tab: "Tab", space: "Space", enter: "Enter", escape: "Esc", backspace: "Delete", delete: "Delete", left_bracket: "[", right_bracket: "]", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
+const actionKeySymbol = { tab: "⇥", space: "␣", enter: "↵", escape: "×", backspace: "⌫", delete: "⌦", left_bracket: "[", right_bracket: "]", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
 const modifierLabel = { meta: "⌘", control: "⌃", alt: "⌥", shift: "⇧" };
 const systemPresentation = { volume_up: ["＋", "System audio"], volume_down: ["−", "System audio"], mute: ["×", "System audio"], play_pause: ["▶", "Media control"] };
 const supportedSystemActions = new Set(Object.keys(systemPresentation));
@@ -143,8 +143,8 @@ function applyLayout(layout) {
   const language = layout.language === "zh-CN" ? "zh-CN" : "en";
   currentLanguage = language;
   const text = copy[language];
-  const builtInLabels = language === "zh-CN" ? { "switch-apps": "切换应用", search: "搜索", overview: "调度中心", desktop: "显示桌面", "show-desktop": "显示桌面", mute: "静音", "volume-up": "增大音量", "volume-down": "减小音量", "play-pause": "播放 / 暂停", "new-window": "新建窗口", "close-window": "关闭窗口", "quit-app": "退出应用", copy: "复制", paste: "粘贴", undo: "撤销" } : {};
-  const builtInLabelByEnglish = language === "zh-CN" ? { "Switch apps": "切换应用", Search: "搜索", Overview: "调度中心", "Show desktop": "显示桌面", "Mute audio": "静音", "Volume up": "增大音量", "Volume down": "减小音量", "Play / Pause": "播放 / 暂停", "New window": "新建窗口", "Close window": "关闭窗口", "Quit application": "退出应用", Copy: "复制", Paste: "粘贴", Undo: "撤销" } : {};
+  const builtInLabels = language === "zh-CN" ? { "switch-apps": "切换应用", search: "搜索", overview: "调度中心", desktop: "显示桌面", "show-desktop": "显示桌面", mute: "静音", "volume-up": "增大音量", "volume-down": "减小音量", "play-pause": "播放 / 暂停", "new-window": "新建窗口", "new-tab": "新建标签页", "quick-search": "快速搜索", "go-back": "后退", "go-forward": "前进", "close-window": "关闭窗口", "quit-app": "退出应用", copy: "复制", paste: "粘贴", undo: "撤销" } : {};
+  const builtInLabelByEnglish = language === "zh-CN" ? { "Switch apps": "切换应用", Search: "搜索", Overview: "调度中心", "Show desktop": "显示桌面", "Mute audio": "静音", "Volume up": "增大音量", "Volume down": "减小音量", "Play / Pause": "播放 / 暂停", "New window": "新建窗口", "New tab": "新建标签页", "Quick search": "快速搜索", Back: "后退", Forward: "前进", "Close window": "关闭窗口", "Quit application": "退出应用", Copy: "复制", Paste: "粘贴", Undo: "撤销" } : {};
   const builtInDetails = language === "zh-CN" ? { "System audio": "系统音频", "Media control": "媒体控制" } : {};
   document.documentElement.lang = language;
   document.title = language === "zh-CN" ? "TouchDock 遥控器" : "TouchDock Remote";

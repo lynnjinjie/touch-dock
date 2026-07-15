@@ -94,6 +94,29 @@ mod tests {
     }
 
     #[test]
+    fn parses_allowlisted_browser_navigation_shortcuts() {
+        for (key_name, key) in [
+            ("left_bracket", Key::LeftBracket),
+            ("right_bracket", Key::RightBracket),
+        ] {
+            let json = format!(
+                r#"{{"type":"command","request_id":8,"command":{{"kind":"shortcut","modifiers":["meta"],"key":"{key_name}"}}}}"#
+            );
+            let message: ClientMessage = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                message,
+                ClientMessage::Command {
+                    request_id: 8,
+                    command: InputCommand::Shortcut {
+                        modifiers: vec![Modifier::Meta],
+                        key,
+                    },
+                }
+            );
+        }
+    }
+
+    #[test]
     fn rejects_unknown_fields() {
         let result = serde_json::from_str::<ClientMessage>(
             r#"{

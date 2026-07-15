@@ -603,6 +603,8 @@ fn key_code(key: Key) -> CGKeyCode {
         Key::X => KeyCode::ANSI_X,
         Key::Y => KeyCode::ANSI_Y,
         Key::Z => KeyCode::ANSI_Z,
+        Key::LeftBracket => KeyCode::ANSI_LEFT_BRACKET,
+        Key::RightBracket => KeyCode::ANSI_RIGHT_BRACKET,
         Key::Mute => KeyCode::MUTE,
     }
 }
@@ -706,5 +708,11 @@ mod tests {
                 ShortcutEvent::Modifier(Modifier::Meta, KeyState::Up, CGEventFlags::empty(),),
             ]
         );
+    }
+
+    #[test]
+    fn maps_browser_navigation_brackets_to_physical_keys() {
+        assert_eq!(key_code(Key::LeftBracket), KeyCode::ANSI_LEFT_BRACKET);
+        assert_eq!(key_code(Key::RightBracket), KeyCode::ANSI_RIGHT_BRACKET);
     }
 }

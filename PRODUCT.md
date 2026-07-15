@@ -18,6 +18,8 @@ TouchDock turns a phone browser into a dependable local remote for a computer. T
 
 The desktop app also owns controller configuration. Users can choose which fixed keys and actions appear on the phone, reorder them, create single-key or multi-modifier shortcuts, add confirmed presets for common application and media actions, tune pointer and scroll speed, and hide optional trackpad controls. Layout, language, and appearance preferences persist on the computer and are served to the paired phone.
 
+For repeated pairing, the macOS menu-bar and Windows system-tray icon opens a compact, theme-aware panel with the current QR code, expiry state, address copy, and pairing refresh. Users can scan without first reopening the main window.
+
 ## Positioning
 
 The fastest, most direct way to turn the phone already in your hand into a private computer remote on the same network.

@@ -101,6 +101,8 @@ pub enum ActionKey {
     X,
     Y,
     Z,
+    LeftBracket,
+    RightBracket,
     Tab,
     Space,
     Enter,

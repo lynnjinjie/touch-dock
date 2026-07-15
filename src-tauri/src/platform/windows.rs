@@ -241,6 +241,8 @@ fn virtual_key(key: Key) -> (VIRTUAL_KEY, bool) {
         Key::X => (VIRTUAL_KEY(b'X' as u16), false),
         Key::Y => (VIRTUAL_KEY(b'Y' as u16), false),
         Key::Z => (VIRTUAL_KEY(b'Z' as u16), false),
+        Key::LeftBracket => (VIRTUAL_KEY(0xDB), false),
+        Key::RightBracket => (VIRTUAL_KEY(0xDD), false),
         Key::Mute => (VIRTUAL_KEY(0xAD), true),
     }
 }

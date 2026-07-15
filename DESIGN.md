@@ -208,9 +208,11 @@ Short taps produce native clicks, two taps produce a native double click, and ho
 
 The desktop layout editor uses stable tabs for Trackpad, Keys, and Actions with a compact phone preview. Keys and actions support explicit visibility and ordering. Custom actions are edited in a modal: a user names the action, selects zero to four modifiers, then records one main key. Recording captures at the window level while active, gives immediate visible feedback, and stops when the user returns to a text field.
 
-Preset actions use matching product icons and cover approved media controls plus common application commands. Choosing a preset only stages it; the layout changes after the user confirms with the modal's bottom action. The mobile header, browser tab, and iOS home-screen metadata reuse the same TouchDock product icon as the desktop app.
+Preset actions use matching product icons and cover approved media controls plus common application and browser navigation commands. Multiple presets may be staged together; the layout changes only after the user confirms with the modal's bottom action. Added actions remain removable and reorderable, and deleting a built-in action makes it available in Presets again. The mobile header, browser tab, and iOS home-screen metadata reuse the same TouchDock product icon as the desktop app.
 
 On macOS, General settings may hide TouchDock from the Dock. The menu bar item remains the persistent recovery path for opening the application and settings. Windows omits this control because taskbar presence follows window state rather than a persistent application activation policy.
+
+The menu-bar and system-tray item opens a compact 280px pairing panel rather than a text-only native menu. It presents a full-size scannable QR code, expiry or connection state, address copy, pairing refresh, and secondary app/settings/quit controls. The panel appears below the macOS menu-bar icon and above the Windows system tray, closes on focus loss or Escape, and always follows the desktop Light, Dark, or System theme preference.
 
 The mobile Actions view remains a compact two-column grid that preserves the desktop order. Labels are localized by the desktop language setting, while user-authored names remain unchanged.
 

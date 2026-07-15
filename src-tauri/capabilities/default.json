@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Minimum permissions for the TouchDock main window.",
-  "windows": ["main"],
+  "windows": ["main", "tray-panel"],
   "permissions": [
     "core:default",
     {

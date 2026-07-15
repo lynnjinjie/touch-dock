@@ -72,6 +72,17 @@ pub fn run() {
                     api.prevent_close();
                     let _ = window.hide();
                 }
+            } else if window.label() == "tray-panel" {
+                match event {
+                    tauri::WindowEvent::Focused(false) => {
+                        let _ = window.hide();
+                    }
+                    tauri::WindowEvent::CloseRequested { api, .. } => {
+                        api.prevent_close();
+                        let _ = window.hide();
+                    }
+                    _ => {}
+                }
             }
         })
         .invoke_handler(tauri::generate_handler![
@@ -82,7 +93,11 @@ pub fn run() {
             set_control_layout,
             dock_visibility::dock_visibility,
             dock_visibility::set_dock_visibility,
-            latest_release
+            latest_release,
+            tray::open_main_window,
+            tray::open_settings_window,
+            tray::close_tray_panel,
+            tray::quit_touchdock
         ])
         .run(tauri::generate_context!())
         .expect("failed to run TouchDock");

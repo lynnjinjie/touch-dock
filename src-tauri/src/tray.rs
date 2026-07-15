@@ -1,31 +1,15 @@
 use tauri::{
-    menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    App, AppHandle, Emitter, Manager,
+    App, AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Position, Rect, Size,
 };
 
-const OPEN_ID: &str = "open";
-const SETTINGS_ID: &str = "settings";
-const QUIT_ID: &str = "quit";
 const OPEN_SETTINGS_EVENT: &str = "open-settings";
-
-#[derive(Debug, PartialEq, Eq)]
-enum TrayAction {
-    Open,
-    Settings,
-    Quit,
-}
-
-fn action_for_menu_id(id: &str) -> Option<TrayAction> {
-    match id {
-        OPEN_ID => Some(TrayAction::Open),
-        SETTINGS_ID => Some(TrayAction::Settings),
-        QUIT_ID => Some(TrayAction::Quit),
-        _ => None,
-    }
-}
+const PANEL_LABEL: &str = "tray-panel";
 
 fn show_main_window(app: &AppHandle, open_settings: bool) {
+    if let Some(panel) = app.get_webview_window(PANEL_LABEL) {
+        let _ = panel.hide();
+    }
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
@@ -37,45 +21,77 @@ fn show_main_window(app: &AppHandle, open_settings: bool) {
     }
 }
 
-pub fn setup(app: &mut App) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, OPEN_ID, "Open TouchDock", true, None::<&str>)?;
-    let settings = MenuItem::with_id(app, SETTINGS_ID, "Settings…", true, None::<&str>)?;
-    let separator = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, QUIT_ID, "Quit TouchDock", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&open, &settings, &separator, &quit])?;
+fn panel_position(rect: Rect, panel_size: PhysicalSize<u32>) -> PhysicalPosition<i32> {
+    let (rect_x, rect_y) = match rect.position {
+        Position::Physical(position) => (f64::from(position.x), f64::from(position.y)),
+        Position::Logical(position) => (position.x, position.y),
+    };
+    let (rect_width, rect_height) = match rect.size {
+        Size::Physical(size) => (f64::from(size.width), f64::from(size.height)),
+        Size::Logical(size) => (size.width, size.height),
+    };
+    let x = rect_x + (rect_width - f64::from(panel_size.width)) / 2.0;
+    #[cfg(target_os = "windows")]
+    let y = rect_y - f64::from(panel_size.height) - 8.0;
+    #[cfg(not(target_os = "windows"))]
+    let y = rect_y + rect_height + 6.0;
+    PhysicalPosition::new(x.round() as i32, y.round() as i32)
+}
 
+fn toggle_panel(app: &AppHandle, rect: Rect) {
+    let Some(panel) = app.get_webview_window(PANEL_LABEL) else {
+        return;
+    };
+    if panel.is_visible().unwrap_or(false) {
+        let _ = panel.hide();
+        return;
+    }
+    let size = panel.outer_size().unwrap_or(PhysicalSize::new(280, 428));
+    let _ = panel.set_position(panel_position(rect, size));
+    let _ = panel.show();
+    let _ = panel.set_focus();
+}
+
+#[tauri::command]
+pub fn open_main_window(app: AppHandle) {
+    show_main_window(&app, false);
+}
+
+#[tauri::command]
+pub fn open_settings_window(app: AppHandle) {
+    show_main_window(&app, true);
+}
+
+#[tauri::command]
+pub fn close_tray_panel(app: AppHandle) {
+    if let Some(panel) = app.get_webview_window(PANEL_LABEL) {
+        let _ = panel.hide();
+    }
+}
+
+#[tauri::command]
+pub fn quit_touchdock(app: AppHandle) {
+    app.exit(0);
+}
+
+pub fn setup(app: &mut App) -> tauri::Result<()> {
     TrayIconBuilder::with_id("touchdock-tray")
         .icon(tauri::include_image!("icons/tray-icon.png"))
         .icon_as_template(cfg!(target_os = "macos"))
         .tooltip("TouchDock")
-        .menu(&menu)
-        .show_menu_on_left_click(true)
-        .on_menu_event(|app, event| match action_for_menu_id(event.id().as_ref()) {
-            Some(TrayAction::Open) => show_main_window(app, false),
-            Some(TrayAction::Settings) => show_main_window(app, true),
-            Some(TrayAction::Quit) => app.exit(0),
-            None => {}
-        })
+        .show_menu_on_left_click(false)
         .on_tray_icon_event(|tray, event| {
-            if let TrayIconEvent::DoubleClick {
-                button: MouseButton::Left,
-                ..
-            } = event
-            {
-                show_main_window(tray.app_handle(), false);
-            }
             if let TrayIconEvent::Click {
+                rect,
                 button: MouseButton::Left,
                 button_state: MouseButtonState::Up,
                 ..
             } = event
             {
-                #[cfg(target_os = "windows")]
-                show_main_window(tray.app_handle(), false);
+                toggle_panel(tray.app_handle(), rect);
             }
         })
         .build(app)?;
-
     Ok(())
 }
 
@@ -84,10 +100,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn maps_only_known_tray_menu_ids() {
-        assert_eq!(action_for_menu_id(OPEN_ID), Some(TrayAction::Open));
-        assert_eq!(action_for_menu_id(SETTINGS_ID), Some(TrayAction::Settings));
-        assert_eq!(action_for_menu_id(QUIT_ID), Some(TrayAction::Quit));
-        assert_eq!(action_for_menu_id("unexpected"), None);
+    fn positions_macos_panel_below_the_menu_bar_icon() {
+        let rect = Rect {
+            position: Position::Physical(PhysicalPosition::new(100, 0)),
+            size: Size::Physical(PhysicalSize::new(24, 24)),
+        };
+        let position = panel_position(rect, PhysicalSize::new(320, 440));
+        assert_eq!(position.x, -48);
+        #[cfg(not(target_os = "windows"))]
+        assert_eq!(position.y, 30);
     }
 }

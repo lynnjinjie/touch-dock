@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
+## [v0.2.5](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.5) - 2026-07-15
+
+### Features
+
+- replace copy, paste, and undo presets with new tab, quick search, and browser back/forward actions
+- allow selecting and confirming multiple action presets in one step
+- restore drag-handle reordering and allow added actions to be deleted
+- keep built-in default actions available in Presets after deletion
+- add a scannable QR popover with address copy and pairing refresh to the macOS menu bar and Windows system tray
+
 ## [v0.2.4](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.4) - 2026-07-14
 
 ### Features
