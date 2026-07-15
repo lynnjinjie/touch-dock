@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
+## [v0.2.7](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.7) - 2026-07-15
+
+### Bug Fixes
+
+- explain how to replace a stale macOS Accessibility entry after an ad-hoc-signed application update
+- restore optional Developer ID signing and notarization inputs in the macOS release workflow while validating partial secret configuration
+- balance the mobile Escape and Delete keycaps with compact equal widths and explicit icon-label pairs
+
 ## [v0.2.6](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.6) - 2026-07-15
 
 ### Features

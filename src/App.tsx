@@ -4,6 +4,8 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { LayoutPanelTop, Settings } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
+
+const MACOS_ACCESSIBILITY_SETTINGS_URL = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility";
 import { SettingsDialog } from "./SettingsDialog";
 import { ControlLayoutView } from "./ControlLayoutView";
 import { createTranslator, readLanguagePreference, saveLanguagePreference, type LanguagePreference } from "./i18n";
@@ -201,13 +203,21 @@ function App() {
     : info && !networkReady
       ? { title: t("localNetworkUnavailable"), body: t("localNetworkUnavailableBody"), action: false }
       : info && !inputReady
-        ? { title: t("inputPermissionRequired"), body: t("inputPermissionBody"), action: info.platform === "macos" }
+        ? {
+          title: t("inputPermissionRequired"),
+          body: t("inputPermissionBody"),
+          recovery: info.platform === "macos" ? t("inputPermissionRecovery") : null,
+          action: info.platform === "macos",
+        }
         : null;
 
   async function requestPermission() {
     setRequestingPermission(true);
     try {
       const status = await invoke<DriverStatus>("request_input_permission");
+      if (status !== "ready" && info?.platform === "macos") {
+        await openUrl(MACOS_ACCESSIBILITY_SETTINGS_URL);
+      }
       showToast(status === "ready" ? t("inputAccessGranted") : t("completePermissionPrompt"));
       await refreshService();
     } catch {
@@ -265,7 +275,7 @@ function App() {
             <section className="view active">
               <header className="page-header"><div><h1>{t("connectPhone")}</h1><p>{t("scanCurrentCode")}</p></div><div className="status-badge" role="status" aria-live="polite"><i aria-hidden="true"></i><span>{statusLabel}</span></div></header>
 
-              {issue && <section className="issue-banner" role="alert"><span className="issue-icon" aria-hidden="true">!</span><div><strong>{issue.title}</strong><p>{issue.body}</p></div>{issue.action && <button className="issue-action" type="button" disabled={requestingPermission} onClick={() => void requestPermission()}>{requestingPermission ? t("requesting") : t("requestAccess")}</button>}</section>}
+              {issue && <section className="issue-banner" role="alert"><span className="issue-icon" aria-hidden="true">!</span><div><strong>{issue.title}</strong><p>{issue.body}</p>{"recovery" in issue && issue.recovery && <p className="issue-recovery">{issue.recovery}</p>}</div>{issue.action && <button className="issue-action" type="button" disabled={requestingPermission} onClick={() => void requestPermission()}>{requestingPermission ? t("requesting") : t("requestAccess")}</button>}</section>}
 
               <section className="pairing-layout" aria-labelledby="pairingTitle">
                 <div className="qr-column"><div className="qr-frame">{connected ? <div className="session-label">{t("phoneConnected")}</div> : <div className="qr-code" aria-label={t("pairingQrLabel")}>{info?.pairingQrSvg ? <div dangerouslySetInnerHTML={{ __html: info.pairingQrSvg }} /> : <span className="qr-placeholder">{t("preparingCode")}</span>}</div>}</div><div className="expiry">{expiryText}</div></div>

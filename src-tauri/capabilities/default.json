@@ -8,7 +8,8 @@
     {
       "identifier": "opener:allow-open-url",
       "allow": [
-        { "url": "https://github.com/lynnjinjie/touch-dock/releases/**" }
+        { "url": "https://github.com/lynnjinjie/touch-dock/releases/**" },
+        { "url": "x-apple.systempreferences:com.apple.preference.security*" }
       ]
     }
   ]

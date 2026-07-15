@@ -97,10 +97,42 @@ jobs:
             echo 'TOUCHDOCK_RELEASE_NOTES'
           } >> "$GITHUB_OUTPUT"
 
+      - name: Validate optional macOS signing secrets
+        if: matrix.target == 'macos'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          values=("$APPLE_CERTIFICATE" "$APPLE_CERTIFICATE_PASSWORD" "$APPLE_SIGNING_IDENTITY" "$APPLE_ID" "$APPLE_PASSWORD" "$APPLE_TEAM_ID")
+          configured=0
+          for value in "${values[@]}"; do
+            if [[ -n "$value" ]]; then configured=$((configured + 1)); fi
+          done
+          if [[ "$configured" -ne 0 && "$configured" -ne "${#values[@]}" ]]; then
+            echo "Configure all six Apple signing and notarization secrets, or leave all of them unset for an ad-hoc build."
+            exit 1
+          fi
+          if [[ "$configured" -eq 0 ]]; then
+            echo "Building with the configured ad-hoc identity. Accessibility permission may need to be re-added after updates."
+          else
+            echo "Building with Developer ID signing and notarization."
+          fi
+
       - name: Build and publish Tauri bundles
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ matrix.target == 'macos' && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.target == 'macos' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ matrix.target == 'macos' && secrets.APPLE_SIGNING_IDENTITY || '' }}
+          APPLE_ID: ${{ matrix.target == 'macos' && secrets.APPLE_ID || '' }}
+          APPLE_PASSWORD: ${{ matrix.target == 'macos' && secrets.APPLE_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ matrix.target == 'macos' && secrets.APPLE_TEAM_ID || '' }}
         with:
           tagName: ${{ env.RELEASE_TAG }}
           releaseName: TouchDock ${{ env.RELEASE_TAG }}

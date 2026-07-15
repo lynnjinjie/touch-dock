@@ -149,8 +149,8 @@ const copy = {
   },
 };
 const keyPresentation = {
-  en: { escape: ["esc", "Esc"], tab: ["⇥", "Tab"], space: ["", "Space"], backspace: ["⌫", "Delete"], enter: ["↵", "Enter"] },
-  "zh-CN": { escape: ["esc", "Esc"], tab: ["⇥", "Tab"], space: ["", "空格"], backspace: ["⌫", "删除"], enter: ["↵", "回车"] },
+  en: { escape: ["⎋", "Esc"], tab: ["⇥", "Tab"], space: ["", "Space"], backspace: ["⌫", "Delete"], enter: ["↵", "Enter"] },
+  "zh-CN": { escape: ["⎋", "Esc"], tab: ["⇥", "Tab"], space: ["", "空格"], backspace: ["⌫", "删除"], enter: ["↵", "回车"] },
 };
 const actionKeyLabel = { tab: "Tab", space: "Space", enter: "Enter", escape: "Esc", backspace: "Delete", delete: "Delete", left_bracket: "[", right_bracket: "]", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
 const actionKeySymbol = { tab: "⇥", space: "␣", enter: "↵", escape: "×", backspace: "⌫", delete: "⌦", left_bracket: "[", right_bracket: "]", arrow_up: "↑", arrow_down: "↓", f11: "F11" };
@@ -208,9 +208,10 @@ function applyLayout(layout) {
     if (!item.visible) return null;
     const [symbol, label] = keyPresentation[language][item.id];
     const button = document.createElement("button");
-    button.className = `utility-key utility-slot-${slot}${item.id === "space" ? " utility-key-space" : ""}`; button.type = "button"; button.dataset.key = item.id;
+    const compact = item.id === "escape" || item.id === "backspace";
+    button.className = `utility-key utility-slot-${slot}${item.id === "space" ? " utility-key-space" : ""}${compact ? " utility-key-compact" : ""}`; button.type = "button"; button.dataset.key = item.id;
     button.setAttribute("aria-label", label);
-    button.innerHTML = item.id === "space" ? `<i class="space-bar" aria-hidden="true"></i><small>${label}</small>` : `<span aria-hidden="true">${symbol}</span>${item.id === "escape" ? "" : `<small>${label}</small>`}`;
+    button.innerHTML = item.id === "space" ? `<i class="space-bar" aria-hidden="true"></i><small>${label}</small>` : `<span aria-hidden="true">${symbol}</span><small>${label}</small>`;
     return button;
   }).filter(Boolean));
   const actions = document.querySelector("#shortcutsPanel");

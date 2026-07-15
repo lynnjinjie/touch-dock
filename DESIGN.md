@@ -218,7 +218,7 @@ The menu-bar and system-tray item opens a compact 280px pairing panel rather tha
 
 The mobile Actions view remains a compact two-column grid that preserves the desktop order. Labels are localized by the desktop language setting, while user-authored names remain unchanged.
 
-The mobile Keys view uses familiar keyboard proportions instead of equal utility-key widths: Escape and Delete occupy the upper corners, while Tab, a wide Space key, and Enter form the lower row. Reordering maps keys to these five stable slots, and hiding a key leaves its slot open rather than shifting unrelated keys.
+The mobile Keys view uses familiar keyboard proportions instead of equal utility-key widths: compact, equal-width Escape and Delete keys occupy the upper corners, while Tab, a wide Space key, and Enter form the lower row. Escape pairs the familiar `⎋` symbol with `Esc`; Delete pairs `⌫` with its localized label, keeping both controls recognizable without making either visually dominant. Reordering maps keys to these five stable slots, and hiding a key leaves its slot open rather than shifting unrelated keys.
 
 ### Settings And Updates
 

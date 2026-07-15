@@ -116,6 +116,7 @@ h2 { margin-bottom: 5px; font-size: 14px; line-height: 1.3; }
 
 .issue-banner { display: flex; gap: 11px; margin-top: 18px; padding: 12px 14px; border-radius: 7px; background: var(--danger-soft); color: var(--danger); }
 .issue-banner p { margin: 2px 0 0; color: color-mix(in srgb, var(--danger) 70%, var(--ink)); font-size: 11px; }
+.issue-banner .issue-recovery { margin-top: 7px; color: var(--ink-muted); line-height: 1.45; }
 .issue-icon { display: grid; place-items: center; flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%; background: var(--danger); color: white; font-size: 11px; font-weight: 800; }
 .issue-action { min-height: 34px; margin-left: auto; padding: 0 12px; border: 0; border-radius: 6px; background: var(--danger); color: white; cursor: default; font-size: 11px; font-weight: 700; white-space: nowrap; }
 .issue-action:hover { background: color-mix(in srgb, var(--danger) 88%, black); }
@@ -292,11 +293,14 @@ h2 { margin-bottom: 5px; font-size: 14px; line-height: 1.3; }
 .preview-key-row { display: grid; grid-template: 38px 44px / repeat(12, minmax(0, 1fr)); gap: 4px 2px; }
 .preview-key-row span, .preview-shortcuts > span { display: grid; place-items: center; min-width: 0; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-2); text-align: center; }
 .preview-key-slot-0 { grid-area: 1 / 1 / 2 / 3; }
-.preview-key-slot-1 { grid-area: 1 / 10 / 2 / 13; }
+.preview-key-slot-1 { grid-area: 1 / 11 / 2 / 13; }
 .preview-key-slot-2 { grid-area: 2 / 1 / 3 / 4; }
 .preview-key-slot-3 { grid-area: 2 / 4 / 3 / 10; }
 .preview-key-slot-4 { grid-area: 2 / 10 / 3 / 13; }
 .preview-key-row .preview-space-key { gap: 2px; }
+.preview-key-row .preview-key-compact { display: flex; gap: 3px; }
+.preview-key-compact b { display: grid; place-items: center; width: 12px; height: 12px; line-height: 1; }
+.preview-key-compact small { font-weight: 700; line-height: 1; }
 .preview-space-key i { width: 36px; height: 2px; border-radius: 2px; background: var(--accent); }
 .preview-key-row b, .preview-shortcuts b { font-size: 10px; }
 .preview-key-row small, .preview-shortcuts small { max-width: 100%; overflow: hidden; color: var(--muted); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }

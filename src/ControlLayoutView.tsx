@@ -56,7 +56,7 @@ const presetIcons: Record<string, LucideIcon> = {
 };
 
 const defaultKeys: ControlItem[] = [
-  { id: "escape", label: "Esc", detail: "Escape", symbol: "×", visible: true },
+  { id: "escape", label: "Esc", detail: "Escape", symbol: "⎋", visible: true },
   { id: "backspace", label: "Delete", detail: "Backspace", symbol: "⌫", visible: true },
   { id: "tab", label: "Tab", detail: "Tab", symbol: "⇥", visible: true },
   { id: "space", label: "Space", detail: "Space", symbol: "␣", visible: true },
@@ -417,7 +417,7 @@ export function ControlLayoutView({ language }: { language: LanguagePreference }
                 {([['control', '⌃'], ['option', '⌥'], ['shift', '⇧'], ['command', '⌘']] as const).map(([value, symbol]) => <button className={heldModifiers.includes(value) ? "active" : ""} key={value} type="button" aria-label={value} aria-pressed={heldModifiers.includes(value)} onPointerDown={(event) => startModifierPress(event, value)} onPointerUp={(event) => finishModifierPress(event, value)} onPointerCancel={(event) => finishModifierPress(event, value)}><b>{symbol}</b></button>)}
               </div>
               <p>{heldModifiers.length > 0 ? `${heldModifiers.map((value) => ({ control: "⌃", option: "⌥", shift: "⇧", command: "⌘" })[value]).join(" ")} ${zh ? "保持按下" : "held"}` : (zh ? "轻点锁定 · 长按临时按住" : "Tap to lock · Hold for momentary")}</p>
-            </div></div> : panel === "keys" ? <div className="phone-controls"><div className="preview-dpad"><span className="up">↑</span><span className="left">←</span><span className="down">↓</span><span className="right">→</span></div><div className="preview-key-row">{previewKeys.map(({ item, slot }) => <span className={`preview-key-slot-${slot} ${item.id === "space" ? "preview-space-key" : ""}`} key={item.id}><b>{item.id === "escape" ? "esc" : item.id === "space" ? "" : item.symbol}</b>{item.id === "space" && <i aria-hidden="true"></i>}{item.id !== "escape" && <small>{itemLabel(item)}</small>}</span>)}</div></div> : <div className="phone-controls preview-shortcuts">{visibleShortcuts.map((item) => <span key={item.id}><b><ItemSymbol item={item} /></b><small>{itemLabel(item)}</small></span>)}</div>}
+            </div></div> : panel === "keys" ? <div className="phone-controls"><div className="preview-dpad"><span className="up">↑</span><span className="left">←</span><span className="down">↓</span><span className="right">→</span></div><div className="preview-key-row">{previewKeys.map(({ item, slot }) => { const compact = item.id === "escape" || item.id === "backspace"; return <span className={`preview-key-slot-${slot} ${item.id === "space" ? "preview-space-key" : ""} ${compact ? "preview-key-compact" : ""}`} key={item.id}><b>{item.id === "space" ? "" : item.symbol}</b>{item.id === "space" && <i aria-hidden="true"></i>}<small>{itemLabel(item)}</small></span>; })}</div></div> : <div className="phone-controls preview-shortcuts">{visibleShortcuts.map((item) => <span key={item.id}><b><ItemSymbol item={item} /></b><small>{itemLabel(item)}</small></span>)}</div>}
             <footer><i aria-hidden="true"></i>{zh ? "命令已加密" : "Commands encrypted"}</footer>
           </div>
         </aside>
