@@ -97,10 +97,11 @@ jobs:
             echo 'TOUCHDOCK_RELEASE_NOTES'
           } >> "$GITHUB_OUTPUT"
 
-      - name: Validate optional macOS signing secrets
+      - name: Validate optional macOS signing credentials
         if: matrix.target == 'macos'
         shell: bash
         env:
+          ENABLE_APPLE_SIGNING: ${{ vars.ENABLE_APPLE_SIGNING }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
@@ -108,31 +109,50 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          if [[ "$ENABLE_APPLE_SIGNING" != "true" ]]; then
+            echo "Developer ID signing is disabled. Building with the configured ad-hoc identity."
+            exit 0
+          fi
+
           values=("$APPLE_CERTIFICATE" "$APPLE_CERTIFICATE_PASSWORD" "$APPLE_SIGNING_IDENTITY" "$APPLE_ID" "$APPLE_PASSWORD" "$APPLE_TEAM_ID")
-          configured=0
           for value in "${values[@]}"; do
-            if [[ -n "$value" ]]; then configured=$((configured + 1)); fi
+            if [[ -z "$value" ]]; then
+              echo "ENABLE_APPLE_SIGNING is true, but one or more Apple signing secrets are missing."
+              exit 1
+            fi
           done
-          if [[ "$configured" -ne 0 && "$configured" -ne "${#values[@]}" ]]; then
-            echo "Configure all six Apple signing and notarization secrets, or leave all of them unset for an ad-hoc build."
+
+          certificate_path="$RUNNER_TEMP/touchdock-developer-id.p12"
+          trap 'rm -f "$certificate_path"' EXIT
+          if ! printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$certificate_path"; then
+            echo "APPLE_CERTIFICATE is not valid Base64. Encode the exported .p12 file, not a downloaded .cer file."
             exit 1
           fi
-          if [[ "$configured" -eq 0 ]]; then
-            echo "Building with the configured ad-hoc identity. Accessibility permission may need to be re-added after updates."
-          else
-            echo "Building with Developer ID signing and notarization."
+          if ! openssl pkcs12 -in "$certificate_path" -passin env:APPLE_CERTIFICATE_PASSWORD -noout >/dev/null 2>&1; then
+            echo "APPLE_CERTIFICATE is not a readable PKCS#12 archive or APPLE_CERTIFICATE_PASSWORD is incorrect."
+            exit 1
           fi
+          if ! openssl pkcs12 -in "$certificate_path" -passin env:APPLE_CERTIFICATE_PASSWORD -nocerts -nodes 2>/dev/null | grep -q -- "PRIVATE KEY"; then
+            echo "APPLE_CERTIFICATE does not contain the private key required for code signing."
+            exit 1
+          fi
+          subject="$(openssl pkcs12 -in "$certificate_path" -passin env:APPLE_CERTIFICATE_PASSWORD -clcerts -nokeys 2>/dev/null | openssl x509 -noout -subject 2>/dev/null || true)"
+          if [[ "$subject" != *"Developer ID Application"* ]]; then
+            echo "APPLE_CERTIFICATE must contain a Developer ID Application certificate and its private key."
+            exit 1
+          fi
+          echo "Developer ID credentials passed preflight validation; signing and notarization are enabled."
 
       - name: Build and publish Tauri bundles
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ matrix.target == 'macos' && secrets.APPLE_CERTIFICATE || '' }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.target == 'macos' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-          APPLE_SIGNING_IDENTITY: ${{ matrix.target == 'macos' && secrets.APPLE_SIGNING_IDENTITY || '' }}
-          APPLE_ID: ${{ matrix.target == 'macos' && secrets.APPLE_ID || '' }}
-          APPLE_PASSWORD: ${{ matrix.target == 'macos' && secrets.APPLE_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ matrix.target == 'macos' && secrets.APPLE_TEAM_ID || '' }}
+          APPLE_CERTIFICATE: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_SIGNING_IDENTITY || '' }}
+          APPLE_ID: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_ID || '' }}
+          APPLE_PASSWORD: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ matrix.target == 'macos' && vars.ENABLE_APPLE_SIGNING == 'true' && secrets.APPLE_TEAM_ID || '' }}
         with:
           tagName: ${{ env.RELEASE_TAG }}
           releaseName: TouchDock ${{ env.RELEASE_TAG }}

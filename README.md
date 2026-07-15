@@ -129,15 +129,17 @@ GitHub Actions runs the frontend build, mobile controller tests, and Rust tests 
 To publish a release, update the version in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, commit the change, then push a matching version tag:
 
 ```bash
-git tag v0.2.7
-git push origin v0.2.7
+git tag v0.2.8
+git push origin v0.2.8
 ```
 
 The release workflow builds TouchDock for Apple Silicon macOS and Windows, then creates a GitHub Release and uploads the installers. Release notes are generated from Conventional Commit subjects, grouped by change type, linked to each commit, and finished with a full comparison link. The workflow can also be run manually with an existing tag to rebuild only its Apple Silicon artifact.
 
 Without Apple credentials, the macOS artifact uses an ad-hoc signature. Replacing an ad-hoc-signed build can leave an enabled but stale Accessibility entry because macOS no longer considers the new process to have the same trusted code identity. Remove the old TouchDock entry from **System Settings → Privacy & Security → Accessibility**, add `/Applications/TouchDock.app` again, then quit and reopen TouchDock.
 
-For stable permissions across updates and trusted public distribution, configure all of these GitHub Actions secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, and `APPLE_TEAM_ID`. They must describe one valid Developer ID Application identity and its notarization account. The workflow rejects partial signing configuration and otherwise falls back to ad-hoc signing.
+For stable permissions across updates and trusted public distribution, first configure these GitHub Actions secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, and `APPLE_TEAM_ID`. `APPLE_CERTIFICATE` must be the Base64-encoded contents of an exported `.p12` archive containing both the Developer ID Application certificate and its private key; a downloaded `.cer` file is not sufficient. After all credentials are ready, add the Actions repository variable `ENABLE_APPLE_SIGNING=true`.
+
+Apple signing is disabled unless that repository variable is explicitly set. The workflow otherwise ignores any stale signing secrets and produces an ad-hoc-signed macOS artifact. When signing is enabled, it validates the Base64 data, `.p12` password, and Developer ID certificate before Tauri attempts to import the identity into the build keychain.
 
 TouchDock checks `https://github.com/lynnjinjie/touch-dock/releases/latest` at startup no more than once every 24 hours. The check runs in Rust, accepts only HTTPS release URLs for this repository, and exposes only the validated version and URL to the frontend. Manual checks in Settings bypass the interval; opening an update is restricted by Tauri capability scope to this repository's Release pages.
 

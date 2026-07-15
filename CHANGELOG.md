@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
+## [v0.2.8](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.8) - 2026-07-15
+
+### Build
+
+- require an explicit repository variable before using Apple signing secrets and validate the Developer ID `.p12` before macOS packaging
+
 ## [v0.2.7](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.7) - 2026-07-15
 
 ### Bug Fixes
