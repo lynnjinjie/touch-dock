@@ -3,11 +3,12 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
-## Unreleased
+## [v0.2.10](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.10) - 2026-07-18
 
 ### Bug Fixes
 
 - show a clear connected state in the tray pairing panel instead of a misleading QR preparation message after the single-use token is consumed
+- distinguish desktop restart or pairing-credential rejection from same-Wi-Fi connection failures on the mobile reconnect screen
 
 ## [v0.2.9](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.9) - 2026-07-15
 

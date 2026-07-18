@@ -7,6 +7,7 @@ import {
   hexToBytes,
   randomNonce,
 } from "./crypto.js";
+import { classifyHandshakeError } from "./connection-errors.js";
 import { HoldState, TapDetector, clampPointerSpeed, clampScrollZoneWidth, normalizeUtilityKeyOrder, scalePointerDelta, scaleScrollDelta, scrollZoneRatio } from "./input-behavior.js";
 
 const shell = document.querySelector("#remoteShell");
@@ -139,13 +140,13 @@ const copy = {
     subtitle: "Remote control", connecting: "Connecting", connected: "Encrypted", disconnected: "Disconnected", reconnect: "Reconnect",
     trackpad: "Trackpad", keys: "Keys", actions: "Actions", move: "Move pointer", left: "Left click", right: "Right click",
     placeholder: "Type on your computer", sendText: "Send text", encrypted: "Commands encrypted on this device",
-    invalidResponse: "Invalid response", invalidResponseBody: "The computer sent an unreadable response.", remoteBusy: "Remote already in use", remoteBusyBody: "Disconnect the other phone, then scan the new QR code.", pairingExpired: "Pairing expired", scanCurrentQr: "Scan the current QR code on your computer.", computerNotVerified: "Computer not verified", scanFromTouchDock: "Scan the current QR code directly from TouchDock.", permissionRequired: "Permission required", permissionBody: "Allow Accessibility or Input control on your computer, then scan again.", secureSessionEnded: "Secure session ended", secureSessionBody: "Scan the refreshed QR code to reconnect.", pairingMissing: "Pairing code missing", pairingMissingBody: "Scan the QR code shown by TouchDock on your computer.", computerUnavailable: "Computer unavailable", computerUnavailableBody: "Keep TouchDock open and confirm both devices use the same Wi-Fi.", connectionPaused: "Connection paused", connectionPausedBody: "Tap Reconnect to resume control.",
+    invalidResponse: "Invalid response", invalidResponseBody: "The computer sent an unreadable response.", remoteBusy: "Remote already in use", remoteBusyBody: "Disconnect the other phone, then scan the new QR code.", pairingExpired: "Pairing expired", scanCurrentQr: "Scan the current QR code on your computer.", resumeInvalid: "Reconnect unavailable", resumeInvalidBody: "TouchDock restarted or its pairing code changed. Scan the latest QR code on your computer.", computerNotVerified: "Computer not verified", scanFromTouchDock: "Scan the current QR code directly from TouchDock.", permissionRequired: "Permission required", permissionBody: "Allow Accessibility or Input control on your computer, then scan again.", secureSessionEnded: "Secure session ended", secureSessionBody: "Scan the refreshed QR code to reconnect.", pairingMissing: "Pairing code missing", pairingMissingBody: "Scan the QR code shown by TouchDock on your computer.", computerUnavailable: "TouchDock unavailable", computerUnavailableBody: "TouchDock may still be starting or its local address may have changed. Wait a moment and tap Reconnect. If it still fails, scan the latest QR code.", connectionPaused: "Connection paused", connectionPausedBody: "Tap Reconnect to resume control.",
   },
   "zh-CN": {
     subtitle: "远程控制", connecting: "正在连接", connected: "已加密", disconnected: "已断开", reconnect: "重新连接",
     trackpad: "触控板", keys: "按键", actions: "快捷操作", move: "移动光标", left: "左键", right: "右键",
     placeholder: "在电脑上输入文字", sendText: "发送文字", encrypted: "命令已在此设备加密",
-    invalidResponse: "响应无效", invalidResponseBody: "电脑返回了无法读取的响应。", remoteBusy: "遥控器正在使用", remoteBusyBody: "请先断开另一台手机，再扫描新的二维码。", pairingExpired: "配对已过期", scanCurrentQr: "请扫描电脑上当前显示的二维码。", computerNotVerified: "无法验证电脑", scanFromTouchDock: "请直接扫描 TouchDock 中当前显示的二维码。", permissionRequired: "需要输入权限", permissionBody: "请在电脑上允许辅助功能或输入控制权限，然后重新连接。", secureSessionEnded: "安全会话已结束", secureSessionBody: "请扫描刷新后的二维码重新连接。", pairingMissing: "缺少配对码", pairingMissingBody: "请扫描电脑 TouchDock 中显示的二维码。", computerUnavailable: "无法连接电脑", computerUnavailableBody: "请保持 TouchDock 开启，并确认两台设备连接到同一 Wi-Fi。", connectionPaused: "连接已暂停", connectionPausedBody: "轻点“重新连接”继续控制。",
+    invalidResponse: "响应无效", invalidResponseBody: "电脑返回了无法读取的响应。", remoteBusy: "遥控器正在使用", remoteBusyBody: "请先断开另一台手机，再扫描新的二维码。", pairingExpired: "配对已过期", scanCurrentQr: "请扫描电脑上当前显示的二维码。", resumeInvalid: "无法恢复连接", resumeInvalidBody: "TouchDock 已重启或配对码已刷新，原恢复凭证已经失效。请扫描电脑上的最新二维码。", computerNotVerified: "无法验证电脑", scanFromTouchDock: "请直接扫描 TouchDock 中当前显示的二维码。", permissionRequired: "需要输入权限", permissionBody: "请在电脑上允许辅助功能或输入控制权限，然后重新连接。", secureSessionEnded: "安全会话已结束", secureSessionBody: "请扫描刷新后的二维码重新连接。", pairingMissing: "缺少配对码", pairingMissingBody: "请扫描电脑 TouchDock 中显示的二维码。", computerUnavailable: "TouchDock 暂时不可用", computerUnavailableBody: "TouchDock 可能仍在启动，或本地连接地址已经变化。请稍等后轻点“重新连接”；如果仍然失败，请扫描最新二维码。", connectionPaused: "连接已暂停", connectionPausedBody: "轻点“重新连接”继续控制。",
   },
 };
 const keyPresentation = {
@@ -247,12 +248,9 @@ function handleServerMessage(event, handshake) {
 
   if (!channel) {
     if (message.type === "error") {
-      const busy = message.code === "session_busy";
-      if (handshake.isResume && !busy) clearResumeToken();
-      showFailure(
-        busy ? "remoteBusy" : "pairingExpired",
-        busy ? "remoteBusyBody" : "scanCurrentQr",
-      );
+      const failure = classifyHandshakeError(message.code, handshake.isResume);
+      if (failure.clearResume) clearResumeToken();
+      showFailure(failure.titleKey, failure.bodyKey);
       socket.close();
       return;
     }

@@ -1,7 +1,7 @@
 {
   "name": "touch-dock",
   "private": true,
-  "version": "0.2.9",
+  "version": "0.2.10",
   "type": "module",
   "scripts": {
     "dev": "pnpm run build:mobile && vite",
@@ -9,7 +9,7 @@
     "build:mobile": "esbuild mobile-src/app.js --bundle --format=esm --minify --outfile=mobile/app.js",
     "check:release-version": "node tools/validate-release-version.mjs",
     "release:notes": "node tools/generate-release-notes.mjs",
-    "test:mobile": "node --test mobile-src/crypto.test.js mobile-src/input-behavior.test.js",
+    "test:mobile": "node --test mobile-src/connection-errors.test.js mobile-src/crypto.test.js mobile-src/input-behavior.test.js",
     "preview": "vite preview",
     "tauri": "tauri"
   },

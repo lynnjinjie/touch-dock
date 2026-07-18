@@ -129,8 +129,8 @@ GitHub Actions runs the frontend build, mobile controller tests, and Rust tests 
 To publish a release, update the version in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, commit the change, then push a matching version tag:
 
 ```bash
-git tag v0.2.9
-git push origin v0.2.9
+git tag v0.2.10
+git push origin v0.2.10
 ```
 
 The release workflow builds TouchDock for Apple Silicon macOS and Windows, then creates a GitHub Release and uploads the installers. Release notes are generated from Conventional Commit subjects, grouped by change type, linked to each commit, and finished with a full comparison link. The workflow can also be run manually with an existing tag to rebuild only its Apple Silicon artifact.
@@ -145,7 +145,7 @@ TouchDock checks `https://github.com/lynnjinjie/touch-dock/releases/latest` at s
 
 ## Connection Lifecycle
 
-The mobile client sends an encrypted heartbeat every 15 seconds. The desktop closes sessions after 45 seconds without a message and releases all held keys and mouse buttons. A paired phone can use **Reconnect** after lock screen, browser suspension, or a temporary network interruption. The resume credential is scoped to the desktop LAN origin, expires after 24 hours, and is invalidated when the user explicitly refreshes pairing on the desktop.
+The mobile client sends an encrypted heartbeat every 15 seconds. The desktop closes sessions after 45 seconds without a message and releases all held keys and mouse buttons. A paired phone can use **Reconnect** after lock screen, browser suspension, or a temporary network interruption while the same desktop process remains available. The resume credential is scoped to the desktop LAN origin, expires after 24 hours, and is invalidated when the desktop application restarts or the user explicitly refreshes pairing. After a restart, scan the latest QR code to establish a new trusted session.
 
 ## Documentation
 

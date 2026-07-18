@@ -45,11 +45,11 @@ Immediately after establishing encryption, the server sends a resume credential 
 {"type":"session_ready","resume_token":"<32-byte Base64URL credential>"}
 ```
 
-The mobile client stores this credential for the desktop LAN origin. It expires after 24 hours and is revoked when the desktop user explicitly refreshes pairing. Automatic QR expiry does not revoke it.
+The mobile client stores this credential for the desktop LAN origin. It expires after 24 hours and is revoked when the desktop process restarts or the desktop user explicitly refreshes pairing. Automatic QR expiry does not revoke it. Resume credentials are intentionally memory-only on the desktop until native secure credential storage is implemented.
 
 ## Resume Handshake
 
-After lock screen, browser suspension, or a temporary network interruption, the mobile client can open a new WebSocket and authenticate with a fresh ephemeral key pair and nonce:
+After lock screen, browser suspension, or a temporary network interruption, the mobile client can open a new WebSocket and authenticate with a fresh ephemeral key pair and nonce, provided the desktop process has not restarted:
 
 ```json
 {
