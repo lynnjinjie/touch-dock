@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 This file follows the versioned format used by GitHub Releases and Conventional Commits-style sections.
 
+## [v0.2.11](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.11) - 2026-11-11
+
+### Bug Fixes
+
+- send native auto-repeat direction-key events while mobile controls remain held so native media applications respond consistently
+- emit native macOS drag events while a remote mouse button is held so long-press dragging works in desktop applications
+
+### Styles
+
+- distinguish development builds with a compact DEV badge in the desktop and tray interfaces plus a development window title
+
 ## [v0.2.10](https://github.com/lynnjinjie/touch-dock/releases/tag/v0.2.10) - 2026-07-18
 
 ### Bug Fixes
@@ -53,6 +64,9 @@ This file follows the versioned format used by GitHub Releases and Conventional 
 
 - replace copy, paste, and undo presets with new tab, quick search, and browser back/forward actions
 - allow selecting and confirming multiple action presets in one step
+
+### Bug Fixes
+
 - restore drag-handle reordering and allow added actions to be deleted
 - keep built-in default actions available in Presets after deletion
 - add a scannable QR popover with address copy and pairing refresh to the macOS menu bar and Windows system tray

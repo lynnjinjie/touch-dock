@@ -94,6 +94,23 @@ mod tests {
     }
 
     #[test]
+    fn parses_a_direction_key_repeat_command() {
+        let message: ClientMessage = serde_json::from_str(
+            r#"{"type":"command","request_id":8,"command":{"kind":"key_repeat","key":"arrow_right"}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            message,
+            ClientMessage::Command {
+                request_id: 8,
+                command: InputCommand::KeyRepeat {
+                    key: Key::ArrowRight,
+                },
+            }
+        );
+    }
+
+    #[test]
     fn parses_allowlisted_browser_navigation_shortcuts() {
         for (key_name, key) in [
             ("left_bracket", Key::LeftBracket),

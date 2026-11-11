@@ -115,6 +115,9 @@ pub enum InputCommand {
         key: Key,
         state: KeyState,
     },
+    KeyRepeat {
+        key: Key,
+    },
     Modifier {
         modifier: Modifier,
         state: KeyState,
@@ -166,6 +169,16 @@ impl InputCommand {
                 }
                 Ok(())
             }
+            Self::KeyRepeat { key } => {
+                if matches!(
+                    key,
+                    Key::ArrowUp | Key::ArrowDown | Key::ArrowLeft | Key::ArrowRight
+                ) {
+                    Ok(())
+                } else {
+                    Err(CommandValidationError::KeyRepeat)
+                }
+            }
             Self::Click { .. }
             | Self::MouseButton { .. }
             | Self::Key { .. }
@@ -177,7 +190,10 @@ impl InputCommand {
     pub fn rate_cost(&self) -> u32 {
         match self {
             Self::Move { .. } | Self::Scroll { .. } => 1,
-            Self::Key { .. } | Self::Modifier { .. } | Self::MouseButton { .. } => 2,
+            Self::Key { .. }
+            | Self::KeyRepeat { .. }
+            | Self::Modifier { .. }
+            | Self::MouseButton { .. } => 2,
             Self::System { .. } => 4,
             Self::Click { .. } | Self::ClickState { .. } => 4,
             Self::Shortcut { modifiers, .. } => 4 + modifiers.len() as u32 * 2,
@@ -254,6 +270,8 @@ pub enum CommandValidationError {
     Text,
     #[error("click count must be between 1 and 3")]
     ClickCount,
+    #[error("only direction keys support key repeat")]
+    KeyRepeat,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -291,6 +309,9 @@ pub trait InputDriver: Send + Sync {
     fn mouse_button(&self, button: MouseButton, state: KeyState) -> Result<(), InputError>;
     fn scroll(&self, dx: f64, dy: f64) -> Result<(), InputError>;
     fn key(&self, key: Key, state: KeyState) -> Result<(), InputError>;
+    fn key_repeat(&self, key: Key) -> Result<(), InputError> {
+        self.key(key, KeyState::Down)
+    }
     fn modifier(&self, modifier: Modifier, state: KeyState) -> Result<(), InputError>;
     fn system_action(&self, action: SystemAction) -> Result<(), InputError>;
     fn shortcut(&self, modifiers: &[Modifier], key: Key) -> Result<(), InputError>;
@@ -304,6 +325,7 @@ pub trait InputDriver: Send + Sync {
             InputCommand::MouseButton { button, state } => self.mouse_button(*button, *state),
             InputCommand::Scroll { dx, dy } => self.scroll(*dx, *dy),
             InputCommand::Key { key, state } => self.key(*key, *state),
+            InputCommand::KeyRepeat { key } => self.key_repeat(*key),
             InputCommand::Modifier { modifier, state } => self.modifier(*modifier, *state),
             InputCommand::System { action } => self.system_action(*action),
             InputCommand::Shortcut { modifiers, key } => self.shortcut(modifiers, *key),
@@ -327,6 +349,19 @@ mod tests {
         assert!(InputCommand::Move { dx: 501.0, dy: 0.0 }
             .validate()
             .is_err());
+    }
+
+    #[test]
+    fn only_direction_keys_may_repeat() {
+        assert!(InputCommand::KeyRepeat {
+            key: Key::ArrowLeft
+        }
+        .validate()
+        .is_ok());
+        assert_eq!(
+            InputCommand::KeyRepeat { key: Key::Space }.validate(),
+            Err(CommandValidationError::KeyRepeat)
+        );
     }
 
     #[test]

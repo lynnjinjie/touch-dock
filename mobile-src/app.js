@@ -488,9 +488,18 @@ trackpad.addEventListener("wheel", (event) => {
 
 const activeReleases = new Set();
 
-function bindHeldButton(button, onDown, onUp) {
-  const hold = new HoldState(onDown, onUp);
+function bindHeldButton(button, onDown, onUp, onRepeat) {
+  const hold = new HoldState(onDown, onUp, onRepeat);
+  let repeatDelay;
+  let repeatInterval;
+  const clearRepeat = () => {
+    clearTimeout(repeatDelay);
+    clearInterval(repeatInterval);
+    repeatDelay = undefined;
+    repeatInterval = undefined;
+  };
   const stop = () => {
+    clearRepeat();
     hold.release();
     activeReleases.delete(stop);
     button.classList.remove("is-pressed");
@@ -502,6 +511,12 @@ function bindHeldButton(button, onDown, onUp) {
     button.classList.add("is-pressed");
     activeReleases.add(stop);
     hold.press();
+    if (onRepeat) {
+      repeatDelay = setTimeout(() => {
+        hold.repeat();
+        repeatInterval = setInterval(() => hold.repeat(), 65);
+      }, 450);
+    }
   });
   button.addEventListener("pointerup", stop);
   button.addEventListener("pointercancel", stop);
@@ -530,10 +545,12 @@ function pressKey(key) {
 }
 
 for (const button of document.querySelectorAll("[data-key]:not(.shortcut)")) {
+  const repeatable = ["arrow_up", "arrow_down", "arrow_left", "arrow_right"].includes(button.dataset.key);
   bindHeldButton(
     button,
     () => command({ kind: "key", key: button.dataset.key, state: "down" }),
     () => command({ kind: "key", key: button.dataset.key, state: "up" }),
+    repeatable ? () => command({ kind: "key_repeat", key: button.dataset.key }) : undefined,
   );
 }
 

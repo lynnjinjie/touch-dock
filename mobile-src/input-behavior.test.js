@@ -35,6 +35,24 @@ test("hold state sends one down and no up until release", () => {
   assert.equal(hold.active, false);
 });
 
+test("hold state repeats key-down semantics without releasing the held key", () => {
+  const calls = [];
+  const hold = new HoldState(
+    () => calls.push("down"),
+    () => calls.push("up"),
+    () => calls.push("repeat"),
+  );
+
+  hold.repeat();
+  hold.press();
+  hold.repeat();
+  hold.repeat();
+  assert.deepEqual(calls, ["down", "repeat", "repeat"]);
+  hold.release();
+  hold.repeat();
+  assert.deepEqual(calls, ["down", "repeat", "repeat", "up"]);
+});
+
 test("tap detector marks a nearby second tap as a double click", () => {
   const detector = new TapDetector({ interval: 350, distance: 24 });
   assert.equal(detector.register({ x: 20, y: 30, time: 1_000 }), 1);

@@ -7,6 +7,7 @@ import { applyTheme, readThemePreference } from "./theme";
 applyTheme(readThemePreference());
 const isTrayPanel = new URLSearchParams(window.location.search).get("surface") === "tray";
 if (isTrayPanel) document.documentElement.dataset.surface = "tray";
+document.title = import.meta.env.DEV ? "TouchDock Dev" : "TouchDock";
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>

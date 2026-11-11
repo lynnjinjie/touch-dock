@@ -129,6 +129,12 @@ impl ClickTracker {
             KeyState::Up => self.active_counts.remove(&button).unwrap_or(1),
         }
     }
+
+    fn active_button(&self) -> Option<MouseButton> {
+        [MouseButton::Left, MouseButton::Right, MouseButton::Middle]
+            .into_iter()
+            .find(|button| self.active_counts.contains_key(button))
+    }
 }
 
 #[derive(Default)]
@@ -137,6 +143,15 @@ pub struct MacOsInputDriver {
 }
 
 impl MacOsInputDriver {
+    fn pointer_event(button: Option<MouseButton>) -> (CGEventType, CGMouseButton) {
+        match button {
+            Some(MouseButton::Left) => (CGEventType::LeftMouseDragged, CGMouseButton::Left),
+            Some(MouseButton::Right) => (CGEventType::RightMouseDragged, CGMouseButton::Right),
+            Some(MouseButton::Middle) => (CGEventType::OtherMouseDragged, CGMouseButton::Center),
+            None => (CGEventType::MouseMoved, CGMouseButton::Left),
+        }
+    }
+
     fn default_output_device() -> Result<u32, InputError> {
         let default_output = AudioObjectPropertyAddress {
             selector: fourcc(b"dOut"),
@@ -356,6 +371,14 @@ impl MacOsInputDriver {
         Ok(())
     }
 
+    fn post_key_repeat(key: Key) -> Result<(), InputError> {
+        let event = CGEvent::new_keyboard_event(Self::source()?, key_code(key), true)
+            .map_err(|_| InputError::EventCreation)?;
+        event.set_integer_value_field(EventField::KEYBOARD_EVENT_AUTOREPEAT, 1);
+        event.post(CGEventTapLocation::HID);
+        Ok(())
+    }
+
     fn post_modifier(modifier: Modifier, state: KeyState) -> Result<(), InputError> {
         let flags = if state == KeyState::Down {
             modifier_flag(modifier)
@@ -466,13 +489,14 @@ impl InputDriver for MacOsInputDriver {
         Self::ensure_trusted()?;
         let current = Self::cursor_location()?;
         let target = Self::movement_target(current, dx, dy);
-        let event = CGEvent::new_mouse_event(
-            Self::source()?,
-            CGEventType::MouseMoved,
-            target,
-            CGMouseButton::Left,
-        )
-        .map_err(|_| InputError::EventCreation)?;
+        let active_button = self
+            .click_tracker
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .active_button();
+        let (event_type, native_button) = Self::pointer_event(active_button);
+        let event = CGEvent::new_mouse_event(Self::source()?, event_type, target, native_button)
+            .map_err(|_| InputError::EventCreation)?;
         event.set_integer_value_field(EventField::MOUSE_EVENT_DELTA_X, Self::event_delta(dx));
         event.set_integer_value_field(EventField::MOUSE_EVENT_DELTA_Y, Self::event_delta(dy));
         event.post(CGEventTapLocation::HID);
@@ -517,6 +541,11 @@ impl InputDriver for MacOsInputDriver {
     fn key(&self, key: Key, state: KeyState) -> Result<(), InputError> {
         Self::ensure_trusted()?;
         Self::post_key(key, state)
+    }
+
+    fn key_repeat(&self, key: Key) -> Result<(), InputError> {
+        Self::ensure_trusted()?;
+        Self::post_key_repeat(key)
     }
 
     fn modifier(&self, modifier: Modifier, state: KeyState) -> Result<(), InputError> {
@@ -677,6 +706,44 @@ mod tests {
             ),
             1
         );
+    }
+
+    #[test]
+    fn held_mouse_buttons_use_native_drag_event_types() {
+        let cases = [
+            (None, CGEventType::MouseMoved, CGMouseButton::Left),
+            (
+                Some(MouseButton::Left),
+                CGEventType::LeftMouseDragged,
+                CGMouseButton::Left,
+            ),
+            (
+                Some(MouseButton::Right),
+                CGEventType::RightMouseDragged,
+                CGMouseButton::Right,
+            ),
+            (
+                Some(MouseButton::Middle),
+                CGEventType::OtherMouseDragged,
+                CGMouseButton::Center,
+            ),
+        ];
+        for (button, expected_event, expected_button) in cases {
+            let (event, native_button) = MacOsInputDriver::pointer_event(button);
+            assert_eq!(event as u32, expected_event as u32);
+            assert_eq!(native_button as u32, expected_button as u32);
+        }
+    }
+
+    #[test]
+    fn click_tracker_exposes_only_currently_held_buttons() {
+        let mut tracker = ClickTracker::default();
+        let now = Instant::now();
+        assert_eq!(tracker.active_button(), None);
+        tracker.count(MouseButton::Left, KeyState::Down, now);
+        assert_eq!(tracker.active_button(), Some(MouseButton::Left));
+        tracker.count(MouseButton::Left, KeyState::Up, now);
+        assert_eq!(tracker.active_button(), None);
     }
 
     #[test]

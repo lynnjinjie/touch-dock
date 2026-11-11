@@ -57,6 +57,9 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .tray-panel-header strong, .tray-panel-header small { display: block; }
 .tray-panel-header strong { font-size: 13px; }
 .tray-panel-header small { margin-top: 2px; color: var(--muted); font-size: 10px; }
+.tray-title-line, .brand-title-line { display: flex; align-items: center; gap: 6px; }
+.tray-title-line { justify-content: center; }
+.build-badge { display: inline-flex; align-items: center; justify-content: center; min-height: 16px; padding: 0 5px; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); border-radius: 999px; background: var(--accent-soft); color: var(--ink); font-size: 8px; font-weight: 800; line-height: 1; letter-spacing: .04em; }
 .tray-panel-footer button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 32px; padding: 0 9px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: 10px; font-weight: 700; }
 .tray-panel-footer button:hover { background: var(--surface-2); color: var(--ink); }
 .tray-qr-area { display: grid; align-content: center; justify-items: center; gap: 8px; min-height: 0; }

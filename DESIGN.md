@@ -224,6 +224,10 @@ The mobile Keys view uses familiar keyboard proportions instead of equal utility
 
 Settings uses a two-column native preferences layout with General and Appearance sections. General contains app version, update state, manual update checking, language, and the macOS-only Dock visibility preference. Appearance contains Light, Dark, and Follow System. Automatic update checks are silent, occur at startup no more than once every 24 hours, and never interrupt an active remote session.
 
+### Development Builds
+
+Development builds add a compact `DEV` badge beside the TouchDock product name in both the desktop sidebar and the menu-bar/system-tray pairing panel. The native window title also reads `TouchDock Dev`. Production builds omit the badge and keep the standard `TouchDock` title, so environment signaling never becomes release UI or connection status.
+
 ### Connection Recovery
 
 An interrupted resumable session uses the title `Connection paused`, supporting copy `Tap Reconnect to resume control.`, and the action label `Reconnect`. `Retry` is reserved for retrying a failed operation, not resuming an established device relationship. While disconnected, remote controls are visibly unavailable and held inputs are released by the desktop service.

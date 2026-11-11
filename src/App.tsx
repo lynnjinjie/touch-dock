@@ -7,6 +7,7 @@ import "./App.css";
 
 const MACOS_ACCESSIBILITY_SETTINGS_URL = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility";
 import { SettingsDialog } from "./SettingsDialog";
+import { BuildBadge } from "./BuildBadge";
 import { ControlLayoutView } from "./ControlLayoutView";
 import { createTranslator, readLanguagePreference, saveLanguagePreference, type LanguagePreference } from "./i18n";
 import { applyTheme, readThemePreference, saveThemePreference, watchSystemTheme, type ThemePreference } from "./theme";
@@ -255,7 +256,13 @@ function App() {
     <>
       <div className="app-shell" data-state={appState}>
         <aside className="sidebar">
-          <div className="brand"><img className="brand-icon" src={appIcon} alt="" /><span><strong>TouchDock</strong><small>{t("localRemote")}</small></span></div>
+          <div className="brand">
+            <img className="brand-icon" src={appIcon} alt="" />
+            <span>
+              <span className="brand-title-line"><strong>TouchDock</strong><BuildBadge /></span>
+              <small>{t("localRemote")}</small>
+            </span>
+          </div>
           <nav className="navigation" aria-label="TouchDock">
             <button className={`nav-item ${view === "connect" ? "active" : ""}`} type="button" aria-current={view === "connect" ? "page" : undefined} onClick={() => setView("connect")}><span className="nav-icon" aria-hidden="true">⌁</span>{t("connect")}</button>
             <button className={`nav-item ${view === "layout" ? "active" : ""}`} type="button" aria-current={view === "layout" ? "page" : undefined} onClick={() => setView("layout")}><span className="nav-icon" aria-hidden="true"><LayoutPanelTop size={15} /></span>{t("controlLayout")}</button>

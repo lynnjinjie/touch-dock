@@ -58,6 +58,13 @@ struct HeldInputs {
 }
 
 impl HeldInputs {
+    fn allows(&self, command: &InputCommand) -> bool {
+        match command {
+            InputCommand::KeyRepeat { key } => self.keys.contains(key),
+            _ => true,
+        }
+    }
+
     fn observe(&mut self, command: &InputCommand) {
         match command {
             InputCommand::Key { key, state } => match state {
@@ -579,6 +586,18 @@ async fn handle_socket(mut socket: WebSocket, state: Arc<ServiceState>) {
                     .await;
                     continue;
                 }
+                if !held_inputs.allows(&command) {
+                    send_secure_error(
+                        &mut socket,
+                        &mut channel,
+                        ErrorCode::InvalidCommand,
+                        "key repeat requires a held direction key",
+                        false,
+                        Some(request_id),
+                    )
+                    .await;
+                    continue;
+                }
                 match state.driver.execute(&command) {
                     Ok(()) => {
                         held_inputs.observe(&command);
@@ -822,6 +841,25 @@ mod tests {
         assert_eq!(driver.releases.load(Ordering::SeqCst), 2);
         assert!(held.keys.is_empty());
         assert!(held.mouse_buttons.is_empty());
+    }
+
+    #[test]
+    fn accepts_repeat_only_while_the_direction_key_is_held() {
+        let mut held = HeldInputs::default();
+        let repeat = InputCommand::KeyRepeat {
+            key: Key::ArrowRight,
+        };
+        assert!(!held.allows(&repeat));
+        held.observe(&InputCommand::Key {
+            key: Key::ArrowRight,
+            state: KeyState::Down,
+        });
+        assert!(held.allows(&repeat));
+        held.observe(&InputCommand::Key {
+            key: Key::ArrowRight,
+            state: KeyState::Up,
+        });
+        assert!(!held.allows(&repeat));
     }
 
     impl InputDriver for RecordingDriver {

@@ -3,6 +3,7 @@ import { Copy, ExternalLink, Power, RefreshCw, Settings, Wifi } from "lucide-rea
 import { useEffect, useMemo, useState } from "react";
 import { readLanguagePreference } from "./i18n";
 import { applyTheme, readThemePreference, watchSystemTheme } from "./theme";
+import { BuildBadge } from "./BuildBadge";
 
 interface RemoteServiceInfo {
   pairingUrl: string | null;
@@ -73,7 +74,7 @@ export function TrayPanel() {
   }
 
   return <main className="tray-panel-shell">
-    <header className="tray-panel-header"><span><strong>TouchDock</strong><small>{status}</small></span></header>
+    <header className="tray-panel-header"><span><span className="tray-title-line"><strong>TouchDock</strong><BuildBadge /></span><small>{status}</small></span></header>
     <section className="tray-qr-area">
       <div className={`tray-qr${connected ? " is-connected" : ""}`}>
         {connected

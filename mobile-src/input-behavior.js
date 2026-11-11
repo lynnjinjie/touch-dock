@@ -45,9 +45,10 @@ export function normalizeUtilityKeyOrder(keys) {
 }
 
 export class HoldState {
-  constructor(onDown, onUp) {
+  constructor(onDown, onUp, onRepeat) {
     this.onDown = onDown;
     this.onUp = onUp;
+    this.onRepeat = onRepeat;
     this.active = false;
   }
 
@@ -55,6 +56,11 @@ export class HoldState {
     if (this.active) return;
     this.active = true;
     this.onDown();
+  }
+
+  repeat() {
+    if (!this.active || !this.onRepeat) return;
+    this.onRepeat();
   }
 
   release() {
